@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block scripts %}
+    <!-- Datatables JQuery table formatting and interface -->
+    <script type="text/javascript" src="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.css"/>
+
+    <!-- Javascript to modify tables -->
+    <script type="text/javascript">
+        jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+            "non-empty-string-asc": function (str1, str2) {
+                if(str1 == "")
+                    return 1;
+                if(str2 == "")
+                    return -1;
+                return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
+            },
+         
+            "non-empty-string-desc": function (str1, str2) {
+                if(str1 == "")
+                    return 1;
+                if(str2 == "")
+                    return -1;
+                return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
+            }
+        } );
+        
+        $(document).ready(function() {
+            $('#gobps').DataTable( {
+                columnDefs: [
+                    {type: 'non-empty-string', targets: 2}
+                ],                
+                "order": [[2, "asc"]]
+            });
+            var shiftWindow = function() { scrollBy(0, -50) };
+            window.addEventListener("hashchange", shiftWindow);
+            function load() { if (window.location.hash) shiftWindow(); }
+        });
+    </script>
+
+    <!-- Javascript to modify tables -->
+    <script type="text/javascript">
+        $(function() {
+    </script>
+{% endblock %}
+{% block content %}
+                    <div class="container-fluid" style="margin-top: 20px;"></div>
+                    <img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'>
+                    <div class='text-center'>
+                        <div class='bs-callout bs-callout-success'><h3><strong>{{ bicluster | upper }}</strong></h3></div>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4>Summary</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Genes</th><th class='text-center'>Patient Tumors</th><th class='text-center'>FPC Var. Exp. (Perm. <em>p</em>-value)</th><th class='text-center'>Survival (<em>p</em>-value)</th><th class='text-center'>Independent Replication</th>
+                                </tr>
+                                <tr>
+                                    <td><a href='#genes'>{{ genes | length }}</a></td><td><a href='#tumors'>{{ tumors | length }}</a></td><td>{% if bicInfo[6]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(bicInfo[2]) }} ({{ "%.1E" | format(bicInfo[3]) }}){% if bicInfo[6]==1 %}</div>{% endif %}</td><td>{% if bicInfo[7]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(bicInfo[4]) }} ({{ "%.1E" | format(bicInfo[5]) }}){% if bicInfo[7]==1 %}</div>{% endif %}</td><td><a>{% if bicInfo[8]==0 and bicInfo[9]==0 %}None{% endif %}{% if bicInfo[8]==1 %}<a href='#replication'>Co-expression</a>{% endif %}<br>{% if bicInfo[9]==1 %}<a href='#replication'>Survival</a>{% endif %}</td>
+                                </tr>
+                            </table>
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Regulators</th><th class='text-center'>Causal Flows</th><th class='text-center'>Enriched GO BPs</th><th class='text-center'>Enriched Hallmarks of Cancer</th>
+                                </tr>
+                                <tr>
+                                    <td><a href='#regulators'>{{ regulators | count }}</a></td><td><a href='#causal'>{{ causalFlows | count }}</a></td><td><a href='#gobp'>{{ gobps | count }}</a></td><td><a href='#hallmarks'>{{ hallmarks | count }}</a></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class='bs-callout bs-callout-default' id='replication'>
+                            <h4>Replication in independent datasets</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Study</th><th class='text-center'>FPC Var. Exp. (Perm. <em>p</em>-value)</th><th class='text-center'>Survival (<em>p</em>-value)</th>
+                                </tr>
+                                {% for rep1 in replication %}
+                                <tr>
+                                    <td><a href='http://www.ncbi.nlm.nih.gov/pubmed/{{ rep1[8] }}' target='_blank'>{{ rep1[7] }}</a></td><td>{% if rep1[9]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(rep1[3]) }} ({{ "%.1E" | format(rep1[4]) }}){% if rep1[9]==1 %}</div>{% endif %}</td><td>{% if rep1[10]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(rep1[5]) }} ({{ "%.1E" | format(rep1[6]) }}){% if rep1[10]==1 %}</div>{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class='bs-callout bs-callout-default' id='genes'>
+                            <h4>Genes</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <div class='text-left'><ul class='list-inline'>{% for gene in genes %}
+                                <li><a href='http://www.genecards.org/cgi-bin/carddisp.pl?gene={{ gene[1] }}' target='_blank'>{{ gene[1] }}</a></li>
+                            {% endfor %}</ul></div>
+                        </div>
+                        
+                        <div class='bs-callout bs-callout-default' id='tumors'>
+                            <h4>Patients <span class="glyphicon glyphicon-plus" data-toggle='collapse' data-target='#patients'></span></h4>
+                            <div id='patients' class='collapse'><ul class='list-inline'>
+                            {% for patient in tumors %}
+                            <li>{{ patient[1] }}</li>
+                            {% endfor %}
+                            </ul></div>
+                        </div>
+
+                        <div class='bs-callout bs-callout-default' id='regulators'>
+                            <h4>Regulators</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Type</th><th class='text-center'>Name</th><th class='text-center'>Action</th><th class='text-center'>Prior Knowledge</th>
+                                </tr>
+                                {% for reg1 in regulators %}
+                                <tr>
+                                    <td>{{ reg1[0] }}</td><td><a href='/search?gene={{reg1[2]}}'>{{ reg1[2] }}</a></td><td>{% if reg1[3]=='Repressor' %}<div style='font-weight: bold; color:#990000'>{{ reg1[3] }}</div>{% endif %}{% if reg1[3]=='Activator' %}<div style='font-weight: bold; color:#009900'>{{ reg1[3] }}</div>{% endif %}</td><td>{{ reg1[4] }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr>
+                                    
+                                </tr>
+                            </table>
+
+                        </div>
+
+                        <div class='bs-callout bs-callout-default' id='causal'>
+                            <h4>Causal Flows</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'><span style='font-weight: bold; color:#990000'>Mutation</span></th><th class='text-center'><span class='glyphicon glyphicon-arrow-right'></span></th><th class='text-center'><span style='font-weight: bold; color:#006600'>Regulator</span></th><th class='text-center'><span class='glyphicon glyphicon-arrow-right'></span></th><th class='text-center'><span style='font-weight: bold; color:#000099'>Bicluster</span></th>
+                                </tr>
+                                {% for cf1 in causalFlows %}
+                                <tr>
+                                    <td><span style='color:#990000'>{{ cf1[0] }}</span></td><td><span class='glyphicon glyphicon-arrow-right'></span></td><td><span style='color:#006600'>{{ cf1[1] }}</span></td><td><span class='glyphicon glyphicon-arrow-right'></span></td><td><span style='color:#000099'>{{ bicluster | upper }}</span></td>
+                                </tr>
+                                {% endfor %}
+                          </table>
+                        </div>
+
+                        <div class='bs-callout bs-callout-default' id='gobp'>
+                            <h4>Enriched GO Biological Processes</h4>
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <table id='gobps' class='table table-bordered text-center'>
+                                <thead>
+                                    <tr>
+                                        <td>GO Term</th><td>GO BP ID</td><td>Genes</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for gobp1 in gobps %}
+                                    <tr>
+                                        <td>{{ gobp1[2] | capitalize }}</td><td><a href='http://amigo.geneontology.org/amigo/term/{{ gobp1[1] }}' target='_blank'>{{ gobp1[1] }}</a></td><td>{% if (gobp1[3] | count)>0 %}{% for gene in gobp1[3] %}<a href='http://www.genecards.org/cgi-bin/carddisp.pl?gene={{ gene }}' target='_blank'>{{ gene }}</a> {% endfor %}{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class='bs-callout bs-callout-default' id='hallmarks'>
+                            
+                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                            <div class="text-left">
+                                <table align='center'>
+                                    <tr>
+                                        <td><h4>Enriched Hallmarks of Cancer</h4>
+                                            <div class="container-fluid" style="margin-top: 20px;"></div>
+                                            <ul>
+                                            {% for h1 in hallmarks %} 
+                                            <li><img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'> {{ h1[0] }}</li>
+                                            {% endfor %}
+                                        </ul></td>
+                                        <td><div class="container-fluid" style="margin-left: 15px;"></div></td>
+                                        <td align='center'><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                </div>
+{% endblock %}
+

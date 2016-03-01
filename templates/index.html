@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block scripts %}
+    <script type="text/javascript">
+      function geneAutocomplete() {
+        $('#term').autocomplete({
+          source: '/genecompletions',
+          minLength: 2,
+        });
+      }
+      $(document).ready(function() {
+        geneAutocomplete();
+      });
+    </script>
+{% endblock %}
+{% block content %}
+                    <div class="container-fluid" style="margin-top: 20px;"></div>
+                    <img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'>
+                    <div class='text-center'>
+                        <h4>Search for gene or somatic mutation:</h4>
+                        <form id="searchform" action="search" method="get">
+                            <input id="term" name="gene" type="search" size=35>
+                            <button type="submit" class="btn btn-primary" value="search"><span class="glyphicon glyphicon-search" aria-hiddne="true"></span> Search</button>
+                        </form>
+                    </div>
+{% endblock %}
+

@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    {% block head %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="google-signin-client_id" content="75692667349-39hlipha81a3v40du06184k75ajl8u4u.apps.googleusercontent.com">
+    <title>{% block title %}{% endblock %} - gbmSYGNAL TRN</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.2.0.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/ui-lightness/jquery-ui.css">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/overrides.css" media="all">
+    <link rel="stylesheet" href="/static/css/main.css" media="all">
+    {% endblock %}
+    {% block scripts %}{% endblock %}
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{url_for('index')}}" title="To start page"><img alt="Logo" class="logo" style="width:100px;" src="/static/images/small.png"></a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="{{url_for('search')}}" title="Search the gbmSYGNAL TRN"><span class="glyphicon glyphicon-search"></span> Search</a></li>
+            <li><a href="{{url_for('network')}}" title="Search the gbmSYGNAL network flows"><span class="glyphicons glyphicons-cluster"></span> Network</a></li>
+            <li><a href="{{url_for('about')}}" title="About the gbmSYGNAL TRN"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
+            <li><a href="{{url_for('download')}}" title="Download the gbmSYGNAL TRN"><span class="glyphicon glyphicon-download"></span> Download</a></li>
+            <li><a href="{{url_for('citation')}}" title="About this site"><span class="glyphicon glyphicon-book"></span> Citation</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    <div class='colmask threecol'>
+        <div class='colmid'>
+            <div class='colleft'>
+                <div class='col1'>
+                    {% block content %}
+                    {% endblock %}
+                    <!-- Column 1 end -->
+                </div>
+                <div class='col2'>
+                    <!-- Column 2 start -->
+                    {% block content_col2 %}
+                    {% endblock %}
+                    <!-- Column 2 end -->
+                </div>
+                <div class='col3'>
+                    <!-- Column 3 start -->
+                    {% block content_col3 %}
+                    {% endblock %}
+                    <!-- Column 3 end -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+          <div class='text-center'><p class="text-muted"><img alt="Logo" class="logo" style="width:100px;" src="/static/images/ISB_logo2012color.png"><br>&copy; 2016 Institute for Systems Biology.</p></div>
+      </div>
+    </footer>
+    {% block bottom %}{% endblock %}
+  </body>
+</html>

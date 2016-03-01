@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+{% block scripts %}
+    <!-- Datatables JQuery table formatting and interface -->
+    <script type="text/javascript" src="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.css"/>
+
+    <!-- Javascript to modify tables -->
+    <script type="text/javascript">
+        jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+            "non-empty-string-asc": function (str1, str2) {
+                if(str1 == "")
+                    return 1;
+                if(str2 == "")
+                    return -1;
+                return ((str1 < str2) ? -1 : ((str1 > str2) ? 1 : 0));
+            },
+         
+            "non-empty-string-desc": function (str1, str2) {
+                if(str1 == "")
+                    return 1;
+                if(str2 == "")
+                    return -1;
+                return ((str1 < str2) ? 1 : ((str1 > str2) ? -1 : 0));
+            }
+        } );
+        $(document).ready(function() {
+            $('#mutations').DataTable({
+                columnDefs: [
+                    {type: 'non-empty-string', targets: 4}
+                ],
+                "order": [[4, "asc"]]        
+            });
+            $('#regulators').DataTable({
+                columnDefs: [
+                    {type: 'non-empty-string', targets: 3}
+                ],
+                "order": [[3, "asc"]]        
+            });
+            $('#biclusters').DataTable({
+                columnDefs: [
+                    {type: 'non-empty-string', targets: 3}
+                ],
+                "order": [[3, "asc"]]        
+            });
+        });
+  </script>
+{% endblock %}
+{% block content %}
+                    <div class="container-fluid" style="margin-top: 20px;"></div>
+                    <div class='text-center'>
+                        <img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'>
+                        <div class='bs-callout bs-callout-success'><h3><strong>Searched for: &nbsp;{{ gene }}</strong></h3></div>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4>{{ gene }} mutations modulate:</h4>
+                            {% if muts|length>0 %}
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Mutation</th><th class='text-center'>Causal Flows</th><th class='text-center'>Regulators</th><th class='text-center'>TFs</th><th class='text-center'>miRNAs</th><th class='text-center'>Biclusters</th>
+                                </tr>
+                                <tr>
+                                    <td>{{ muts['name'] }}</td><td>{{ muts['data'] | count }}</td><td>{{ muts['regs'] | count }}</td><td>{{ muts['tfs'] | count }}</td><td>{{ muts['miRNAs'] | count }}</td><td>{{ muts['biclusters'] | count }}</td>
+                                </tr>
+                            </table>
+                            <table id='mutations' class='table table-bordered text-center'>
+                                <thead>
+                                    <tr>
+                                        <td>Mutation</td><td>Regulator</td><td>Bicluster</td><td>Survival (<i>p</i>-value)</td><td>Hallmark(s)</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cf1 in muts['data'] %}
+                                    <tr>
+                                        <td>{{ cf1[0] }}</td><td>{{ cf1[1] }}</td><td><a href='{{url_for('bicluster')}}?bicluster={{ cf1[2] }}'>{{ cf1[2] | upper }}</a></td><td>{{ "%.1f" | format(cf1[3]) }} ({{ "%.1E" | format(cf1[4]) }})</td><td>{% for h1 in cf1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                 
+                            {% else %}
+                            <div class='bg-danger'>&nbsp;<br><p>Mutations in {{ gene }} are not predicted modulate anything in gbmSYGNAL.<br>&nbsp;</p></div>
+                            {% endif %}
+                        </div>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4>{{ gene }} regulates:</h4>
+                            {% if regs|length>0 %}
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Regulator</th><th class='text-center'>Regulated Biclusters</th>
+                                </tr>
+                                <tr>
+                                    <td>{{ gene }}</td><td>{{ regs['biclusters'] }}</td>
+                                </tr>
+                            </table>
+                            <table id='regulators' class='table table-bordered text-center'>
+                                <thead>
+                                    <tr>
+                                        <td>Regulator (Action)</td><td>Bicluster</td><td>Survival (<i>p</i>-value)</td><td>Hallmark(s)</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reg1 in regs['data'] %}
+                                    <tr>
+                                        <td>{{ reg1[0] }} ({{ reg1[1] }})</td><td><a href='{{url_for('bicluster')}}?bicluster={{ reg1[2] }}'>{{ reg1[2] | upper }}</a></td><td>{{ "%.2f" | format(reg1[3]) }} ({{ "%.1E" | format(reg1[4]) }})</td><td>{% for h1 in reg1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class='bg-danger'>&nbsp;<br><p>Not predicted to regulate anything.<br>&nbsp;</p></div>
+                            {% endif %}
+                        </div>
+
+                        <div class='bs-callout bs-callout-default'>
+                            <h4>Biclusters containing {{ gene }}:</h4>
+                            {% if bics|length>0 %}
+                            <table class='table table-bordered table-striped text-center'>
+                                <tr>
+                                    <th class='text-center'>Gene</th><th class='text-center'>Biclusters</th>
+                                </tr>
+                                <tr>
+                                    <td>{{ gene }}</td><td>{{ bics['biclusters'] }}</td>
+                                </tr>
+                            </table>
+                            <table id='biclusters' class='table table-bordered text-center'>
+                                <thead>
+                                    <tr>
+                                        <td>Bicluster</td><td>Var. Exp. FPC (Perm. <i>p</i>-value)</td><td>Survival (<i>p</i>-value)</td><td>Hallmark(s)</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bic1 in bics['data'] %}
+                                    <tr>
+                                        <td><a href='{{url_for('bicluster')}}?bicluster={{ bic1[0] }}'>{{ bic1[0] | upper }}</a></td><td>{{ bic1[1] }} ({{ bic1[2] }})</td><td>{{ bic1[3] }} ({{ bic1[4] }})</td><td>{% for h1 in bic1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <div class='bg-danger'>&nbsp;<br><p>Not in any biclusters.<br>&nbsp;</p></div>
+                            {% endif %}
+                        </div>
+                </div>
+{% endblock %}
