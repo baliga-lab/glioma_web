@@ -1,28 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Index{% endblock %}
 {% block content %}
-<p><div class="container-fluid" style="margin-top: 30px;">
-    <img class='displayed' src='/static/images/gbmSygnalNetwork.gif'>
+<div class="container-fluid" style="margin-top: 30px;">
+    <a href='/'><img class='displayed' src='/static/images/gbmSygnalNetwork.gif'></a>
         <center>
-            <h4>Search for gene or somatic mutation:</h4>
-            <form id="searchform" action="searchgene" method="get">
-                <input id="term" name="searchterm" type="search" size=35>
-                <input id="searchbutton" type="submit" value="Search" class='searchbutton'>
-            </form>
+            <h2>Download:</h2>
         </center>
-    </div></p>&nbsp;</br>
+    </div>
 {% endblock %}
 {% block bottom %}
-    <script type="text/javascript">
-      function geneAutocomplete() {
-        $('#term').autocomplete({
-          source: '/genecompletions',
-          minLength: 2,
-        });
-      }
-      $(document).ready(function() {
-        geneAutocomplete();
-      });
-    </script>
 {% endblock %}
 
