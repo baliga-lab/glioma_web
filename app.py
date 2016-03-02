@@ -10,6 +10,10 @@ import MySQLdb
 from flask import Flask, Response, url_for, redirect, render_template, request, session, flash, jsonify
 import flask
 
+import gzip
+import pandas
+import numpy as np
+
 convert = {'Evading apoptosis':'cellDeath.gif', 'Evading immune detection':'avoidImmuneDestruction.gif', 'Genome instability and mutation':'genomicInstability.gif', 'Insensitivity to antigrowth signals':'evadeGrowthSuppressors.gif', 'Limitless replicative potential':'immortality.gif', 'Reprogramming energy metabolism':'cellularEnergetics.gif', 'Self sufficiency in growth signals':'sustainedProliferativeSignalling.gif', 'Sustained angiogenesis':'angiogenesis.gif', 'Tissue invasion and metastasis':'invasion.gif', 'Tumor promoting inflammation':'promotingInflammation.gif'}
 
 app = Flask(__name__)
@@ -23,6 +27,62 @@ def dbconn():
     return MySQLdb.connect(host=app.config['HOST'], user=app.config['USER'],
                            passwd=app.config['PASS'], db=app.config['DB'])
 
+
+def read_exps():
+    with gzip.open(app.config['GENE_EXPR_FILE'], 'rb') as f:
+        return pandas.read_csv(f, sep=',', index_col=0, header=0)
+
+######################################################################
+#### Boxplot functionality
+######################################################################
+
+def submat_data(submat, col_indexes):
+    """given a sub matrix and a list of column indexes
+    that specify the columns, of the matrix, return a list
+    of (col_idx, median, min, max, lower_quartile, upper_quartile)
+    tuples
+    """
+    col_medians = np.median(submat, axis=0)
+    col_mins = np.min(submat, axis=0)
+    col_maxs = np.max(submat, axis=0)
+    col_upper_quarts = np.percentile(submat, q=75.0, axis=0)
+    col_lower_quarts = np.percentile(submat, q=25.0, axis=0)
+    data = [(idx, col_medians[i], col_mins[i], col_maxs[i],
+             col_lower_quarts[i], col_upper_quarts[i])
+            for i, idx in enumerate(col_indexes)]
+    return sorted(data, key=lambda x: x[1])
+
+
+def cluster_data(cursor, cluster_id, df):
+    patient_map = {name: index
+                   for index, name in enumerate(df.columns.values)}
+    gene_map = {name: index for index, name in enumerate(df.index)}
+
+    cursor.execute("""select g.symbol from bic_gene bg
+join gene g on bg.gene_id=g.id where bicluster_id=%s""", [cluster_id])
+    genes = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("""select name from bic_pat bp
+join patient p on bp.patient_id=p.id where bicluster_id=%s""",
+                   [cluster_id])
+    patients = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("""select name from patient where id not in
+(select patient_id from bic_pat where bicluster_id=%s)""",
+                   [cluster_id])
+    excluded_patients = [row[0] for row in cursor.fetchall()]
+
+
+    gene_indexes = sorted([gene_map[g] for g in genes])
+    patient_indexes = sorted([patient_map[p] for p in patients])
+    ex_patient_indexes = sorted([patient_map[p] for p in excluded_patients])
+
+    submat = df.values[np.ix_(gene_indexes, patient_indexes)]
+    in_data = submat_data(submat, patient_indexes)
+
+    ex_submat = df.values[:,ex_patient_indexes]
+    out_data = submat_data(ex_submat, ex_patient_indexes)
+    return in_data, out_data
 
 ######################################################################
 #### Available application paths
@@ -45,9 +105,9 @@ def gene():
 def patient():
     return render_template('patient.html')
 
-@app.route('/bicluster')
-def bicluster():
-    bicluster = request.args.get('bicluster')
+@app.route('/bicluster/<bicluster>')
+def bicluster(bicluster=None):
+    #bicluster = request.args.get('bicluster')
     db = dbconn()
     c = db.cursor()
     c.execute("""SELECT * FROM bicluster WHERE name=%s""", [bicluster])
@@ -137,8 +197,13 @@ def bicluster():
         c.execute("""SELECT gene.symbol FROM go_gene, gene, bic_gene WHERE go_gene.go_bp_id=%s AND bic_gene.bicluster_id=%s AND go_gene.gene_id=gene.id AND gene.id=bic_gene.gene_id""", [gobp[0], bicInfo[0]])
         tmp = c.fetchall()
         gobps.append(list(gobp)+[sorted(list(set([i[0] for i in tmp])))])
-    
-    return render_template('bicluster.html', bicluster=bicluster, genes=genes, tumors=tumors, bicInfo=bicInfo, replication=replication, regulators=regulators, hallmarks=h2, gobps=gobps, causalFlows=causalFlows)
+
+    exp_data = read_exps()
+    in_data, out_data = cluster_data(c, bicInfo[0], exp_data)
+    print "# in_data: ", len(in_data)
+    return render_template('bicluster.html', bicluster=bicluster, genes=genes, tumors=tumors, bicInfo=bicInfo,
+                           replication=replication, regulators=regulators, hallmarks=h2, gobps=gobps,
+                           causalFlows=causalFlows)
 
 @app.route('/search')
 def search():

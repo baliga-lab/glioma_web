@@ -71,7 +71,7 @@
                                 <tbody>
                                     {% for cf1 in muts['data'] %}
                                     <tr>
-                                        <td>{{ cf1[0] }}</td><td>{{ cf1[1] }}</td><td><a href='{{url_for('bicluster')}}?bicluster={{ cf1[2] }}'>{{ cf1[2] | upper }}</a></td><td>{{ "%.1f" | format(cf1[3]) }} ({{ "%.1E" | format(cf1[4]) }})</td><td>{% for h1 in cf1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                        <td>{{ cf1[0] }}</td><td>{{ cf1[1] }}</td><td><a href="{{url_for('bicluster', bicluster=cf1[2])}}">{{ cf1[2] | upper }}</a></td><td>{{ "%.1f" | format(cf1[3]) }} ({{ "%.1E" | format(cf1[4]) }})</td><td>{% for h1 in cf1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -101,7 +101,7 @@
                                 <tbody>
                                     {% for reg1 in regs['data'] %}
                                     <tr>
-                                        <td>{{ reg1[0] }} ({{ reg1[1] }})</td><td><a href='{{url_for('bicluster')}}?bicluster={{ reg1[2] }}'>{{ reg1[2] | upper }}</a></td><td>{{ "%.2f" | format(reg1[3]) }} ({{ "%.1E" | format(reg1[4]) }})</td><td>{% for h1 in reg1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                        <td>{{ reg1[0] }} ({{ reg1[1] }})</td><td><a href="{{url_for('bicluster', bicluster=reg1[2])}}">{{ reg1[2] | upper }}</a></td><td>{{ "%.2f" | format(reg1[3]) }} ({{ "%.1E" | format(reg1[4]) }})</td><td>{% for h1 in reg1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -131,7 +131,7 @@
                                 <tbody>
                                     {% for bic1 in bics['data'] %}
                                     <tr>
-                                        <td><a href='{{url_for('bicluster')}}?bicluster={{ bic1[0] }}'>{{ bic1[0] | upper }}</a></td><td>{{ bic1[1] }} ({{ bic1[2] }})</td><td>{{ bic1[3] }} ({{ bic1[4] }})</td><td>{% for h1 in bic1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
+                                        <td><a href="{{url_for('bicluster', bicluster=bic1[0])}}">{{ bic1[0] | upper }}</a></td><td>{{ bic1[1] }} ({{ bic1[2] }})</td><td>{{ bic1[3] }} ({{ bic1[4] }})</td><td>{% for h1 in bic1[5] %}<img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'>{% endfor %}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
