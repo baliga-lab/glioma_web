@@ -49,11 +49,11 @@
 {% block content %}
                     <div class="container-fluid" style="margin-top: 20px;"></div>
                     <div class='text-center'>
-                        <img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'>
+                        <a href='/'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'></a>
                         <div class='bs-callout bs-callout-success'><h3><strong>Searched for: &nbsp;{{ gene }}</strong></h3></div>
                         <div class='bs-callout bs-callout-default'>
                             <h4>{{ gene }} mutations modulate:</h4>
-                            {% if muts|length>0 %}
+                            {% if muts['data']|length>0 %}
                             <table class='table table-bordered table-striped text-center'>
                                 <tr>
                                     <th class='text-center'>Mutation</th><th class='text-center'>Causal Flows</th><th class='text-center'>Regulators</th><th class='text-center'>TFs</th><th class='text-center'>miRNAs</th><th class='text-center'>Biclusters</th>

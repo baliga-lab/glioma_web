@@ -37,11 +37,10 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="{{url_for('search')}}" title="Search the gbmSYGNAL TRN"><span class="glyphicon glyphicon-search"></span> Search</a></li>
-            <li><a href="{{url_for('network')}}" title="Search the gbmSYGNAL network flows"><span class="glyphicons glyphicons-cluster"></span> Network</a></li>
+            <li><a href="/" title="Explore the gbmSYGNAL network flows"><span class="glyphicon glyphicon-certificate"></span> gbmSYGNAL Network</a></li>
+            <li><a href="/" title="Explore combinatorial regulatory network"><span class="glyphicon glyphicon-asterisk"></span> Combinatorial Network</a></li>
             <li><a href="{{url_for('about')}}" title="About the gbmSYGNAL TRN"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
             <li><a href="{{url_for('download')}}" title="Download the gbmSYGNAL TRN"><span class="glyphicon glyphicon-download"></span> Download</a></li>
-            <li><a href="{{url_for('citation')}}" title="About this site"><span class="glyphicon glyphicon-book"></span> Citation</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -72,7 +71,7 @@
 
     <footer class="footer">
       <div class="container">
-          <div class='text-center'><p class="text-muted"><img alt="Logo" class="logo" style="width:100px;" src="/static/images/ISB_logo2012color.png"><br>&copy; 2016 Institute for Systems Biology.</p></div>
+          <div class='text-center'><a href='http://www.systemsbiology.org/'><p class="text-muted"><img alt="Logo" class="logo" style="width:100px;" src="/static/images/ISB_logo2012color.png"><br><small>&copy; 2016 Institute for Systems Biology.</small></p></a></div>
       </div>
     </footer>
     {% block bottom %}{% endblock %}
