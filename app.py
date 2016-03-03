@@ -224,6 +224,8 @@ def bicluster(bicluster=None):
     phenotypes = [row[0] for row in c.fetchall()]
     boxplot_colors = [BOXPLOT_COLOR_MAP[pt] for pt in phenotypes]
     js_boxplot_data = [item[1:] for item in all_boxplot_data]
+    perc20 = len(in_data) / 5
+    quintiles = [perc20 * i for i in range(1, 6)]
     return render_template('bicluster.html', **locals())
 
 

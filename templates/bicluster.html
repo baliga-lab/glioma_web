@@ -42,7 +42,7 @@
       $('#boxplot-graph').highcharts({
         chart: {type: 'boxplot'},
         legend: {enabled: true},
-        title: {text: 'Gene Expressions (Box Plot)'},
+        title: {text: 'Patient Tumors'},
         xAxis: {
           plotLines: [{
             value: {{in_data|length}}, color: 'red', dashStyle: 'shortdash',
@@ -51,10 +51,43 @@
               text: 'columns in/out ({{all_boxplot_data|length}})',
               style: { color: 'gray', fontSize: '8pt' }
             }
-          }]
+          },
+          {
+            value: {{quintiles[0]}},
+            color: 'lightGray', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: '20%', style: { color: 'lightGray', fontSize: '8pt' }
+            }
+          },
+          {
+            value: {{quintiles[1]}},
+            color: 'lightGray', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: '40%', style: { color: 'lightGray', fontSize: '8pt' }
+            }
+          },
+          {
+            value: {{quintiles[2]}},
+            color: 'lightGray', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: '60%', style: { color: 'lightGray', fontSize: '8pt' }
+            }
+          },
+          {
+            value: {{quintiles[3]}},
+            color: 'lightGray', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: '80%', style: { color: 'lightGray', fontSize: '8pt' }
+            }
+          }
+          ]
         },
         yAxis: {
-          title: {text: 'log10'},
+          title: {text: 'Relative Expression'},
           plotLines: [{
             value: {{ratios_mean}},
             color: 'green', dashStyle: 'shortdash', width: 1, zIndex: 3,
