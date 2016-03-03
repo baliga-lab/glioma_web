@@ -47,8 +47,13 @@ def submat_data(submat, col_indexes):
     col_maxs = np.max(submat, axis=0)
     col_upper_quarts = np.percentile(submat, q=75.0, axis=0)
     col_lower_quarts = np.percentile(submat, q=25.0, axis=0)
-    data = [(idx, col_medians[i], col_mins[i], col_maxs[i],
-             col_lower_quarts[i], col_upper_quarts[i])
+    data = [[idx,
+             col_mins[i],
+             col_lower_quarts[i],
+             col_medians[i],
+             col_upper_quarts[i],
+             col_maxs[i]
+             ]
             for i, idx in enumerate(col_indexes)]
     return sorted(data, key=lambda x: x[1])
 
@@ -84,6 +89,15 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
     out_data = submat_data(ex_submat, ex_patient_indexes)
     return in_data, out_data
 
+BOXPLOT_COLOR_MAP = {
+    'control': 'green',
+    'classical': 'black',
+    'neural': 'lightBlue',
+    'NA': 'grey',
+    'g_cimp': 'brown',
+    'proneural': 'red',
+    'mesenchymal': 'orange'
+}
 ######################################################################
 #### Available application paths
 ######################################################################
@@ -199,11 +213,19 @@ def bicluster(bicluster=None):
         gobps.append(list(gobp)+[sorted(list(set([i[0] for i in tmp])))])
 
     exp_data = read_exps()
-    in_data, out_data = cluster_data(c, bicInfo[0], exp_data)
+    in_data, out_data = cluster_data(c, bicInfo[0], exp_data)    
+    ratios_mean = np.mean(exp_data.values)
     print "# in_data: ", len(in_data)
-    return render_template('bicluster.html', bicluster=bicluster, genes=genes, tumors=tumors, bicInfo=bicInfo,
-                           replication=replication, regulators=regulators, hallmarks=h2, gobps=gobps,
-                           causalFlows=causalFlows)
+    hallmarks = h2
+    all_boxplot_data = in_data + out_data
+    patients = [exp_data.columns.values[item[0]] for item in all_boxplot_data]
+    c.execute("""select pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in %s""",
+              [patients])
+    phenotypes = [row[0] for row in c.fetchall()]
+    boxplot_colors = [BOXPLOT_COLOR_MAP[pt] for pt in phenotypes]
+    js_boxplot_data = [item[1:] for item in all_boxplot_data]
+    return render_template('bicluster.html', **locals())
+
 
 @app.route('/search')
 def search():

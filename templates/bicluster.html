@@ -5,6 +5,8 @@
     <script type="text/javascript" src="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/t/dt/jq-2.2.0,dt-1.10.11/datatables.min.css"/>
 
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
     <!-- Javascript to modify tables -->
     <script type="text/javascript">
         jQuery.extend( jQuery.fn.dataTableExt.oSort, {
@@ -35,12 +37,51 @@
             var shiftWindow = function() { scrollBy(0, -50) };
             window.addEventListener("hashchange", shiftWindow);
             function load() { if (window.location.hash) shiftWindow(); }
-        });
-    </script>
 
-    <!-- Javascript to modify tables -->
-    <script type="text/javascript">
-        $(function() {
+
+      $('#boxplot-graph').highcharts({
+        chart: {type: 'boxplot'},
+        legend: {enabled: true},
+        title: {text: 'Gene Expressions (Box Plot)'},
+        xAxis: {
+          plotLines: [{
+            value: {{in_data|length}}, color: 'red', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: 'columns in/out ({{all_boxplot_data|length}})',
+              style: { color: 'gray', fontSize: '8pt' }
+            }
+          }]
+        },
+        yAxis: {
+          title: {text: 'log10'},
+          plotLines: [{
+            value: {{ratios_mean}},
+            color: 'green', dashStyle: 'shortdash', width: 1, zIndex: 3,
+            label: {
+              text: 'mean',
+              style: { color: 'gray', fontSize: '8pt' }
+            }
+          }]
+        },
+        series: [{
+          name: 'All',
+          colorByPoint: true,
+          data: {{js_boxplot_data}},
+          colors: {{boxplot_colors|safe}}
+          },
+          { name: 'control', color: 'green'},
+          { name: 'classical', color: 'black'},
+          { name: 'neural', color: 'lightBlue'},
+          { name: 'g_cimp', color: 'brown'},
+          { name: 'proneural', color: 'red'},
+          { name: 'mesenchymal', color: 'orange'},
+          { name: 'NA', color: 'grey'}
+          ]
+      });
+
+
+        });
     </script>
 {% endblock %}
 {% block content %}
@@ -48,6 +89,7 @@
                     <a href='/'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'></a>
                     <div class='text-center'>
                         <div class='bs-callout bs-callout-success'><h3><strong>{{ bicluster | upper }}</strong></h3></div>
+                        <div id="boxplot-graph"></div>
                         <div class='bs-callout bs-callout-default'>
                             <h4>Summary</h4>
                             <div class="container-fluid" style="margin-top: 20px;"></div>
@@ -177,4 +219,3 @@
                         </div>
                 </div>
 {% endblock %}
-
