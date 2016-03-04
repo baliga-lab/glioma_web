@@ -137,10 +137,10 @@ FROM bicluster WHERE name=%s""", [bicluster])
         'survival_flag': bc_survival_pval <= 0.05
         }
 
-    c.execute("""SELECT gene.id, gene.symbol, gene.entrez FROM bic_gene, gene WHERE bic_gene.bicluster_id=%s AND gene.id=bic_gene.gene_id""", [bc_pk])
-    genes = sorted(c.fetchall(), key=lambda symbol: symbol[1])
-    c.execute("""SELECT patient.id, patient.name FROM bic_pat, patient WHERE bic_pat.bicluster_id=%s AND patient.id=bic_pat.patient_id""", [bc_pk])
-    tumors = sorted(c.fetchall(), key=lambda name: name[1])
+    c.execute("""SELECT g.id, g.symbol, g.entrez FROM bic_gene bg join gene g on bg.gene_id=g.id where bg.bicluster_id=%s order by g.symbol""", [bc_pk])
+    genes = list(c.fetchall())
+    c.execute("""SELECT p.id, p.name FROM bic_pat bp join patient p on p.id=bp.patient_id where bp.bicluster_id=%s order by p.name""", [bc_pk])
+    tumors = list(c.fetchall())
     # Replication
     c.execute("""SELECT * FROM replication WHERE bicluster_id=%s""", [bc_pk])
     tmp = list(c.fetchall())
