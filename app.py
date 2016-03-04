@@ -90,13 +90,13 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
     return in_data, out_data
 
 BOXPLOT_COLOR_MAP = {
-    'control': 'green',
+    'control': '#6abd45',
     'classical': 'black',
-    'neural': 'lightBlue',
+    'neural': '#32689b',
     'NA': 'grey',
-    'g_cimp': 'brown',
-    'proneural': 'red',
-    'mesenchymal': 'orange'
+    'g_cimp': '#8a171a',
+    'proneural': '#ed2024',
+    'mesenchymal': '#faa41a'
 }
 ######################################################################
 #### Available application paths
