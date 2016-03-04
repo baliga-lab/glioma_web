@@ -131,7 +131,16 @@
                                     <th class='text-center'>Genes</th><th class='text-center'>Patient Tumors</th><th class='text-center'>FPC Var. Exp. (Perm. <em>p</em>-value)</th><th class='text-center'>Survival (<em>p</em>-value)</th><th class='text-center'>Independent Replication</th>
                                 </tr>
                                 <tr>
-                                    <td><a href='#genes'>{{ genes | length }}</a></td><td><a href='#tumors'>{{ tumors | length }}</a></td><td>{% if bicInfo[6]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(bicInfo[2]) }} ({{ "%.1E" | format(bicInfo[3]) }}){% if bicInfo[6]==1 %}</div>{% endif %}</td><td>{% if bicInfo[7]==1 %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(bicInfo[4]) }} ({{ "%.1E" | format(bicInfo[5]) }}){% if bicInfo[7]==1 %}</div>{% endif %}</td><td><a>{% if bicInfo[8]==0 and bicInfo[9]==0 %}None{% endif %}{% if bicInfo[8]==1 %}<a href='#replication'>Co-expression</a>{% endif %}<br>{% if bicInfo[9]==1 %}<a href='#replication'>Survival</a>{% endif %}</td>
+                                    <td><a href='#genes'>{{genes|length}}</a></td><td><a href='#tumors'>{{tumors|length}}</a></td>
+                                    {# varexp #}
+                                    <td>{% if bic_info.varexp_flag %}<div style='font-weight: bold; color:#990000'>{% endif %}{{"%.2f"|format(bic_info.varexp_fpc)}} ({{"%.1E"|format(bic_info.varexp_fpc_pval)}}){% if bic_info.varexp_flag %}</div>{% endif %}</td>
+
+                                    {# Survival #}
+                                    <td>{% if bic_info.survival_flag %}<div style='font-weight: bold; color:#990000'>{% endif %}{{ "%.2f" | format(bic_info.survival) }} ({{ "%.1E" | format(bic_info.survival_pval) }}){% if bic_info.survival_flag %}</div>{% endif %}</td>
+
+                                    {# Replication #}
+                                    <td><a>{% if not bic_info.repl_coexp and not bic_info.repl_survival %}None{% endif %}{% if bic_info.repl_coexp %}<a href='#replication'>Co-expression</a>{% endif %}<br>{% if bic_info.repl_survival %}<a href='#replication'>Survival</a>{% endif %}</td>
+
                                 </tr>
                             </table>
                             <table class='table table-bordered table-striped text-center'>

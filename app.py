@@ -121,41 +121,56 @@ def patient():
 
 @app.route('/bicluster/<bicluster>')
 def bicluster(bicluster=None):
-    #bicluster = request.args.get('bicluster')
     db = dbconn()
     c = db.cursor()
-    c.execute("""SELECT * FROM bicluster WHERE name=%s""", [bicluster])
-    bicInfo = c.fetchall()[0]
-    tmp = [0,0]
-    if float(bicInfo[3])<=0.05:
-        tmp[0] = 1
-    if float(bicInfo[5])<=0.05:
-        tmp[1] = 1
-    bicInfo = list(bicInfo) + tmp
-    c.execute("""SELECT gene.id, gene.symbol, gene.entrez FROM bic_gene, gene WHERE bic_gene.bicluster_id=%s AND gene.id=bic_gene.gene_id""", [bicInfo[0]])
+    c.execute("""SELECT id,name,var_exp_fpc,var_exp_fpc_p_value,survival,survival_p_value
+FROM bicluster WHERE name=%s""", [bicluster])
+    bc_pk, bc_name, bc_varexp_fpc, bc_varexp_fpc_pval, bc_survival, bc_survival_pval = c.fetchone()
+    bic_info = {
+        'pk': bc_pk,
+        'name': bc_name,
+        'varexp_fpc': bc_varexp_fpc,
+        'varexp_fpc_pval': bc_varexp_fpc_pval,
+        'survival': bc_survival,
+        'survival_pval': bc_survival_pval,
+        'varexp_flag': bc_varexp_fpc_pval <= 0.05,
+        'survival_flag': bc_survival_pval <= 0.05
+        }
+
+    c.execute("""SELECT gene.id, gene.symbol, gene.entrez FROM bic_gene, gene WHERE bic_gene.bicluster_id=%s AND gene.id=bic_gene.gene_id""", [bc_pk])
     genes = sorted(c.fetchall(), key=lambda symbol: symbol[1])
-    c.execute("""SELECT patient.id, patient.name FROM bic_pat, patient WHERE bic_pat.bicluster_id=%s AND patient.id=bic_pat.patient_id""", [bicInfo[0]])
+    c.execute("""SELECT patient.id, patient.name FROM bic_pat, patient WHERE bic_pat.bicluster_id=%s AND patient.id=bic_pat.patient_id""", [bc_pk])
     tumors = sorted(c.fetchall(), key=lambda name: name[1])
     # Replication
-    c.execute("""SELECT * FROM replication WHERE bicluster_id=%s""", [bicInfo[0]])
+    c.execute("""SELECT * FROM replication WHERE bicluster_id=%s""", [bc_pk])
     tmp = list(c.fetchall())
     repConvert = {'French':'Gravendeel, et al. 2009','REMBRANDT':'Madhavan, et al. 2009','GSE7696':'Murat, et al. 2008'}
     repPubmed = {'French':'19920198','REMBRANDT':'19208739','GSE7696':'18565887'}
     replication = []
+
     replicated = [0, 0]
+    bic_info['repl_coexp'] = False
+    bic_info['repl_survival'] = False
+
     for i in tmp:
         tmp1 = [0,0]
-        if float(bicInfo[3])<=0.05 and float(i[4])<=0.05:
+        if bic_info['varexp_fpc_pval'] <= 0.05 and float(i[4])<=0.05:
             tmp1[0] = 1
             replicated[0] = 1
-        if (float(bicInfo[4])>0 and (float(i[5])>0 and float(i[6])<=0.05)) or (float(bicInfo[4])<0 and (float(i[5])<0 and float(i[6])<=0.05)):
+            bic_info['repl_coexp'] = True
+
+        if (( bic_info['survival'] > 0 and (float(i[5]) > 0 and float(i[6])<=0.05)) or
+            ( bic_info['survival'] < 0 and (float(i[5]) < 0 and float(i[6])<=0.05))):
             tmp1[1] = 1
             replicated[1] = 1
+            bic_info['repl_survival'] = True
+
         replication.append(list(i)+[repConvert[i[2]], repPubmed[i[2]]]+tmp1)
-    bicInfo = bicInfo + replicated
+
     # Regulators
     regulators = []
-    c.execute("""SELECT gene.id, gene.symbol, tf_regulator.action FROM tf_regulator, gene WHERE tf_regulator.bicluster_id=%s AND gene.id=tf_regulator.gene_id""", [bicInfo[0]])
+    c.execute("""SELECT gene.id, gene.symbol, tf_regulator.action FROM tf_regulator, gene WHERE tf_regulator.bicluster_id=%s AND gene.id=tf_regulator.gene_id""",
+              [bc_pk])
     tfs = list(c.fetchall())
     tfList = []
     for tf in tfs:
@@ -166,7 +181,7 @@ def bicluster(bicluster=None):
                 known = 'Yes'
         regulators.append(['TF', tf[0], tf[1], tf[2].capitalize(), known])
         tfList.append(tf[1])
-    c.execute("""SELECT mirna.id, mirna.name, mirna.mir2disease, mirna.hmdd FROM mirna_regulator, mirna WHERE mirna_regulator.bicluster_id=%s AND mirna.id=mirna_regulator.mirna_id""", [bicInfo[0]])
+    c.execute("""SELECT mirna.id, mirna.name, mirna.mir2disease, mirna.hmdd FROM mirna_regulator, mirna WHERE mirna_regulator.bicluster_id=%s AND mirna.id=mirna_regulator.mirna_id""", [bc_pk])
     mirnas = list(c.fetchall())
     mirnaList = []
     for mirna in mirnas:
@@ -178,7 +193,7 @@ def bicluster(bicluster=None):
             mirnaList.append(mirna[1])
     regulators = sorted(regulators, key=lambda name: name[1])
     # Get causal flows with bicluster
-    c.execute("""SELECT * FROM causal_flow WHERE bicluster_id=%s""", [bicInfo[0]])
+    c.execute("""SELECT * FROM causal_flow WHERE bicluster_id=%s""", [bc_pk])
     tmp_cf = c.fetchall()
     causalFlows = []
     for cf1 in tmp_cf:
@@ -198,22 +213,25 @@ def bicluster(bicluster=None):
                 c.execute("""SELECT name FROM nci_nature_pathway WHERE id=%s""", [m1[1]])
                 mut = c.fetchall()[0][0]
             causalFlows.append([mut, g1])
+
     causalFlows = sorted(causalFlows, key=lambda mutation: mutation[0])
+
     # Hallmarks of Cancer
-    c.execute("""SELECT hallmark.name FROM hallmark, bic_hal WHERE bic_hal.bicluster_id=%s AND hallmark.id=bic_hal.hallmark_id""", [bicInfo[0]])
+    c.execute("""SELECT hallmark.name FROM hallmark, bic_hal WHERE bic_hal.bicluster_id=%s AND hallmark.id=bic_hal.hallmark_id""", [bc_pk])
     h1 = list(c.fetchall())
     h2 = [[i[0],convert[i[0]]] for i in h1]
+
     # GO
-    c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go, go_bp WHERE bic_go.bicluster_id=%s AND go_bp.id=bic_go.go_bp_id""", [bicInfo[0]])
+    c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go, go_bp WHERE bic_go.bicluster_id=%s AND go_bp.id=bic_go.go_bp_id""", [bc_pk])
     tmps = list(c.fetchall())
     gobps = []
     for gobp in tmps:
-        c.execute("""SELECT gene.symbol FROM go_gene, gene, bic_gene WHERE go_gene.go_bp_id=%s AND bic_gene.bicluster_id=%s AND go_gene.gene_id=gene.id AND gene.id=bic_gene.gene_id""", [gobp[0], bicInfo[0]])
+        c.execute("""SELECT gene.symbol FROM go_gene, gene, bic_gene WHERE go_gene.go_bp_id=%s AND bic_gene.bicluster_id=%s AND go_gene.gene_id=gene.id AND gene.id=bic_gene.gene_id""", [gobp[0], bc_pk])
         tmp = c.fetchall()
         gobps.append(list(gobp)+[sorted(list(set([i[0] for i in tmp])))])
 
     exp_data = read_exps()
-    in_data, out_data = cluster_data(c, bicInfo[0], exp_data)    
+    in_data, out_data = cluster_data(c, bc_pk, exp_data)    
     ratios_mean = np.mean(exp_data.values)
     print "# in_data: ", len(in_data)
     hallmarks = h2
