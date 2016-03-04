@@ -55,7 +55,7 @@ def submat_data(submat, col_indexes):
              col_maxs[i]
              ]
             for i, idx in enumerate(col_indexes)]
-    return sorted(data, key=lambda x: x[1])
+    return sorted(data, key=lambda x: x[3])
 
 
 def cluster_data(cursor, cluster_id, df):
@@ -85,7 +85,7 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
     submat = df.values[np.ix_(gene_indexes, patient_indexes)]
     in_data = submat_data(submat, patient_indexes)
 
-    ex_submat = df.values[:,ex_patient_indexes]
+    ex_submat = df.values[np.ix_(gene_indexes, ex_patient_indexes)]
     out_data = submat_data(ex_submat, ex_patient_indexes)
     return in_data, out_data
 
@@ -222,7 +222,8 @@ FROM bicluster WHERE name=%s""", [bicluster])
     h2 = [[i[0],convert[i[0]]] for i in h1]
 
     # GO
-    c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go, go_bp WHERE bic_go.bicluster_id=%s AND go_bp.id=bic_go.go_bp_id""", [bc_pk])
+    c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go join go_bp on go_bp.id=bic_go.go_bp_id
+WHERE bic_go.bicluster_id=%s""", [bc_pk])
     tmps = list(c.fetchall())
     gobps = []
     for gobp in tmps:
@@ -233,13 +234,13 @@ FROM bicluster WHERE name=%s""", [bicluster])
     exp_data = read_exps()
     in_data, out_data = cluster_data(c, bc_pk, exp_data)    
     ratios_mean = np.mean(exp_data.values)
-    print "# in_data: ", len(in_data)
     hallmarks = h2
     all_boxplot_data = in_data + out_data
     patients = [exp_data.columns.values[item[0]] for item in all_boxplot_data]
-    c.execute("""select pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in %s""",
+    c.execute("""select p.name, pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in %s""",
               [patients])
-    phenotypes = [row[0] for row in c.fetchall()]
+    ptmap = {patient: phenotype for patient, phenotype in c.fetchall()}
+    phenotypes = [ptmap[patient] for patient in patients]
     boxplot_colors = [BOXPLOT_COLOR_MAP[pt] for pt in phenotypes]
     js_boxplot_data = [item[1:] for item in all_boxplot_data]
     perc20 = len(in_data) / 5
