@@ -169,8 +169,8 @@ FROM bicluster WHERE name=%s""", [bicluster])
 
     # Regulators
     regulators = []
-    c.execute("""SELECT gene.id, gene.symbol, tf_regulator.action FROM tf_regulator, gene WHERE tf_regulator.bicluster_id=%s AND gene.id=tf_regulator.gene_id""",
-              [bc_pk])
+    c.execute("""SELECT g.id, g.symbol, tfr.action FROM tf_regulator tfr join gene g on tfr.gene_id=g.id
+WHERE tfr.bicluster_id=%s""", [bc_pk])
     tfs = list(c.fetchall())
     tfList = []
     for tf in tfs:
@@ -181,8 +181,10 @@ FROM bicluster WHERE name=%s""", [bicluster])
                 known = 'Yes'
         regulators.append(['TF', tf[0], tf[1], tf[2].capitalize(), known])
         tfList.append(tf[1])
-    c.execute("""SELECT mirna.id, mirna.name, mirna.mir2disease, mirna.hmdd FROM mirna_regulator, mirna WHERE mirna_regulator.bicluster_id=%s AND mirna.id=mirna_regulator.mirna_id""", [bc_pk])
+    c.execute("""SELECT mirna.id, mirna.name, mirna.mir2disease, mirna.hmdd
+FROM mirna_regulator mr join mirna on mirna.id=mr.mirna_id WHERE mr.bicluster_id=%s""", [bc_pk])
     mirnas = list(c.fetchall())
+
     mirnaList = []
     for mirna in mirnas:
         if not mirna[0] in mirnaList:
@@ -192,34 +194,38 @@ FROM bicluster WHERE name=%s""", [bicluster])
             regulators.append(['miRNA', mirna[0], mirna[1], 'Repressor', known])
             mirnaList.append(mirna[1])
     regulators = sorted(regulators, key=lambda name: name[1])
+
     # Get causal flows with bicluster
-    c.execute("""SELECT * FROM causal_flow WHERE bicluster_id=%s""", [bc_pk])
+    c.execute("""SELECT id,somatic_mutation_id,regulator_id,regulator_type,bicluster_id,leo_nb_atob,mlogp_m_atob
+FROM causal_flow WHERE bicluster_id=%s""", [bc_pk])
     tmp_cf = c.fetchall()
     causalFlows = []
-    for cf1 in tmp_cf:
-        if cf1[3]=='tf':
-            c.execute("""SELECT symbol FROM gene WHERE id=%s""", [cf1[2]])
-            g1 = c.fetchall()[0][0]
+
+    for cf_pk, cf_som_mut_id, cf_reg_id, cf_reg_type, cf_bc_id, cf_leo, cf_mlogp in tmp_cf:
+        if cf_reg_type == 'tf':
+            c.execute("""SELECT symbol FROM gene WHERE id=%s""", [cf_reg_id])
+            g1 = c.fetchone()[0]
         else:
-            c.execute("""SELECT name FROM mirna WHERE id=%s""", [cf1[2]])
-            g1 = c.fetchall()[0][0]
-        if (cf1[3]=='tf' and g1 in tfList) or (cf1[3]=='mirna' and g1 in mirnaList):
-            c.execute("""SELECT * FROM somatic_mutation WHERE id=%s""", [cf1[1]])
-            m1 = c.fetchall()[0]
+            c.execute("""SELECT name FROM mirna WHERE id=%s""", [cf_reg_id])
+            g1 = c.fetchone()[0]
+
+        if (cf_reg_type == 'tf' and g1 in tfList) or (cf_reg_type == 'mirna' and g1 in mirnaList):
+            c.execute("""SELECT * FROM somatic_mutation WHERE id=%s""", [cf_som_mut_id])
+            m1 = c.fetchone()
             if m1[2]=='gene':
                 c.execute("""SELECT symbol FROM gene WHERE id=%s""", [m1[1]])
-                mut = c.fetchall()[0][0]
+                mut = c.fetchone()[0]
             elif m1[2]=='pathway':
                 c.execute("""SELECT name FROM nci_nature_pathway WHERE id=%s""", [m1[1]])
-                mut = c.fetchall()[0][0]
+                mut = c.fetchone()[0]
             causalFlows.append([mut, g1])
 
     causalFlows = sorted(causalFlows, key=lambda mutation: mutation[0])
 
     # Hallmarks of Cancer
-    c.execute("""SELECT hallmark.name FROM hallmark, bic_hal WHERE bic_hal.bicluster_id=%s AND hallmark.id=bic_hal.hallmark_id""", [bc_pk])
-    h1 = list(c.fetchall())
-    h2 = [[i[0],convert[i[0]]] for i in h1]
+    c.execute("""SELECT hm.name FROM hallmark hm join bic_hal bh on hm.id=bh.hallmark_id
+WHERE bh.bicluster_id=%s""", [bc_pk])
+    hallmarks = [ [row[0], convert[row[0]] ] for row in c.fetchall()]
 
     # GO
     c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go join go_bp on go_bp.id=bic_go.go_bp_id
@@ -234,7 +240,6 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     exp_data = read_exps()
     in_data, out_data = cluster_data(c, bc_pk, exp_data)    
     ratios_mean = np.mean(exp_data.values)
-    hallmarks = h2
     all_boxplot_data = in_data + out_data
     patients = [exp_data.columns.values[item[0]] for item in all_boxplot_data]
     c.execute("""select p.name, pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in %s""",
@@ -245,6 +250,7 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     js_boxplot_data = [[patients[i]] + item[1:] for i, item in enumerate(all_boxplot_data)]
     perc20 = len(in_data) / 5
     quintiles = [perc20 * i for i in range(1, 6)]
+    db.close()
     return render_template('bicluster.html', **locals())
 
 
@@ -349,6 +355,7 @@ def search():
                     h1 = list(set([convert[i[0]] for i in tmp1]))
                     h2 = [[i[0],convert[i[0]]] for i in tmp1]
                     bics['data'].append([bic1[4], bic1[5], bic1[6], bic1[7], bic1[8], h2])
+        db.close()
         return render_template('search.html', gene=gene, muts=muts, regs=regs, bics=bics)
 
 @app.route('/network')
@@ -371,9 +378,12 @@ def citation():
 def genecompletions():
     term = request.args.get('term')
     db = dbconn()
-    c = db.cursor()
-    c.execute("""SELECT symbol FROM gene WHERE symbol LIKE %s""", [str(term)+'%'])
-    json1 = json.dumps([i[0] for i in c.fetchall()])
+    try:
+        c = db.cursor()
+        c.execute("""SELECT symbol FROM gene WHERE symbol LIKE %s""", [str(term)+'%'])
+        json1 = json.dumps([i[0] for i in c.fetchall()])
+    finally:
+        db.close()
     return Response(response=json1, status=200, mimetype='application/json')
 
 if __name__ == '__main__':
