@@ -99,8 +99,9 @@
         },
         series: [{
           name: 'All',
+          showInLegend: false,
           colorByPoint: true,
-          data: {{js_boxplot_data}},
+          data: {{js_boxplot_data|safe}},
           colors: {{boxplot_colors|safe}}
           },
           { name: 'Normal Brain', color: '#6abd45'},

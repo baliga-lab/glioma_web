@@ -242,7 +242,7 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     ptmap = {patient: phenotype for patient, phenotype in c.fetchall()}
     phenotypes = [ptmap[patient] for patient in patients]
     boxplot_colors = [BOXPLOT_COLOR_MAP[pt] for pt in phenotypes]
-    js_boxplot_data = [item[1:] for item in all_boxplot_data]
+    js_boxplot_data = [[patients[i]] + item[1:] for i, item in enumerate(all_boxplot_data)]
     perc20 = len(in_data) / 5
     quintiles = [perc20 * i for i in range(1, 6)]
     return render_template('bicluster.html', **locals())
