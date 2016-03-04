@@ -233,10 +233,10 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     tmps = list(c.fetchall())
     gobps = []
     for gobp in tmps:
-        c.execute("""SELECT gene.symbol FROM go_gene, gene, bic_gene WHERE go_gene.go_bp_id=%s AND bic_gene.bicluster_id=%s AND go_gene.gene_id=gene.id AND gene.id=bic_gene.gene_id""", [gobp[0], bc_pk])
-        tmp = c.fetchall()
-        gobps.append(list(gobp)+[sorted(list(set([i[0] for i in tmp])))])
+        c.execute("""SELECT distinct gene.symbol FROM go_gene, gene, bic_gene WHERE go_gene.go_bp_id=%s AND bic_gene.bicluster_id=%s AND go_gene.gene_id=gene.id AND gene.id=bic_gene.gene_id order by gene.symbol""", [gobp[0], bc_pk])
+        gobps.append(list(gobp) + [[row[0] for row in c.fetchall()]])
 
+    # Prepare graph plotting data
     exp_data = read_exps()
     in_data, out_data = cluster_data(c, bc_pk, exp_data)    
     ratios_mean = np.mean(exp_data.values)
