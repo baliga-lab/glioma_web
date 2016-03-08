@@ -10,9 +10,15 @@ import MySQLdb
 from flask import Flask, Response, url_for, redirect, render_template, request, session, flash, jsonify
 import flask
 
+import math
+import itertools
 import gzip
 import pandas
 import numpy as np
+import rpy2.robjects as robjects
+
+
+NUM_PARTS = 5
 
 convert = {'Evading apoptosis':'cellDeath.gif', 'Evading immune detection':'avoidImmuneDestruction.gif', 'Genome instability and mutation':'genomicInstability.gif', 'Insensitivity to antigrowth signals':'evadeGrowthSuppressors.gif', 'Limitless replicative potential':'immortality.gif', 'Reprogramming energy metabolism':'cellularEnergetics.gif', 'Self sufficiency in growth signals':'sustainedProliferativeSignalling.gif', 'Sustained angiogenesis':'angiogenesis.gif', 'Tissue invasion and metastasis':'invasion.gif', 'Tumor promoting inflammation':'promotingInflammation.gif'}
 
@@ -33,8 +39,31 @@ def read_exps():
         return pandas.read_csv(f, sep=',', index_col=0, header=0)
 
 ######################################################################
-#### Boxplot functionality
+#### Graph/Visualization functionality
 ######################################################################
+
+GRAPH_COLOR_MAP = {
+    'control': '#6abd45',
+    'classical': 'black',
+    'neural': '#32689b',
+    'NA': 'grey',
+    'g_cimp': '#8a171a',
+    'proneural': '#ed2024',
+    'mesenchymal': '#faa41a'
+}
+
+# order in which the enrichment phenotypes are ordered
+ENRICHMENT_PHENOTYPES = [
+    'g_cimp', 'proneural', 'neural', 'classical', 'mesenchymal', 'control'
+]
+
+
+def phyper(q, m, n, k, lower_tail=False):
+    """calls the R function phyper"""
+    r_phyper = robjects.r['phyper']
+    kwargs = {'lower.tail': lower_tail}
+    return float(r_phyper(float(q), float(m), float(n), float(k), **kwargs)[0])
+
 
 def submat_data(submat, col_indexes):
     """given a sub matrix and a list of column indexes
@@ -89,15 +118,98 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
     out_data = submat_data(ex_submat, ex_patient_indexes)
     return in_data, out_data
 
-BOXPLOT_COLOR_MAP = {
-    'control': '#6abd45',
-    'classical': 'black',
-    'neural': '#32689b',
-    'NA': 'grey',
-    'g_cimp': '#8a171a',
-    'proneural': '#ed2024',
-    'mesenchymal': '#faa41a'
-}
+
+def subtype_enrichment(cursor, cluster_id, df):
+    patient_map = {name: index
+                   for index, name in enumerate(df.columns.values)}
+    gene_map = {name: index for index, name in enumerate(df.index)}
+
+    cursor.execute("""select g.symbol from bic_gene bg
+join gene g on bg.gene_id=g.id where bicluster_id=%s""", [cluster_id])
+    genes = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("""select name from bic_pat bp
+join patient p on bp.patient_id=p.id where bicluster_id=%s""",
+                   [cluster_id])
+    included_patients = [row[0] for row in cursor.fetchall()]
+
+    cursor.execute("""select name from patient where id not in
+(select patient_id from bic_pat where bicluster_id=%s)""",
+                   [cluster_id])
+    excluded_patients = [row[0] for row in cursor.fetchall()]
+
+    gene_indexes = sorted([gene_map[g] for g in genes])
+
+    # above is exactly like boxplot
+    # now make a phenotype map
+    cursor.execute("""select p.name, pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id
+where pt.name <> 'NA'""")
+    ptmap = {patient: phenotype for patient, phenotype in cursor.fetchall()}
+    all_patients = {patient for patient in ptmap.keys()}
+    phenotypes = {phenotype for phenotype in ptmap.values()}
+
+    in_patient_indexes = sorted([patient_map[p] for p in included_patients if p in all_patients])
+    ex_patient_indexes = sorted([patient_map[p] for p in excluded_patients if p in all_patients])
+
+    # we use the submat_data function to sort our patients
+    in_submat = df.values[np.ix_(gene_indexes, in_patient_indexes)]
+    in_data = submat_data(in_submat, in_patient_indexes)
+    sorted_in_indexes = [row[0] for row in in_data]
+    ex_submat = df.values[np.ix_(gene_indexes, ex_patient_indexes)]
+    ex_data = submat_data(ex_submat, ex_patient_indexes)
+    sorted_ex_indexes = [row[0] for row in ex_data]
+
+    # sorted by median pValue
+    sorted_patient_indexes = sorted_in_indexes + sorted_ex_indexes
+    
+    # group patients into phenotype groups.
+    # NOTE: the ptmap items need to be sorted, otherwise groupby fails to group correctly
+    pt_patients = itertools.groupby(sorted(ptmap.items(), key=lambda pair: pair[1]),
+                                    key=lambda pair: pair[1])
+    pt_patients = {phenotype: set(map(lambda p: p[0], patients))
+                   for phenotype, patients in pt_patients}
+
+    num_columns = len(all_patients)
+    cols_per_part = int(math.floor(num_columns / NUM_PARTS))
+    #print "# columns: %d # cols/part: %d" % (num_columns, cols_per_part)
+
+    pvalues = []
+
+    for i in range(NUM_PARTS):
+        part_pvalues = {}
+        start = cols_per_part * i
+        end = (cols_per_part * (i + 1)) - 1
+
+        # adjust end for the last part
+        if i == (NUM_PARTS - 1) and end != (num_columns - 1):
+            end = num_columns - 1
+        cur_patients = [df.columns.values[p_i] for p_i in sorted_patient_indexes[start:end + 1]]
+        #print "Part %d, %d-%d, # current patients: %d" % (i, start, end, len(cur_patients))
+        for phenotype in phenotypes:
+            q = len([p for p in cur_patients if p in pt_patients[phenotype]])
+            k = len(cur_patients)
+            m = len(pt_patients[phenotype])
+            n = num_columns - m
+            pvalue = phyper(q, m, n, k)
+            #print "part %d, phenotype: %s, q=%d, k=%d, m=%d, n=%d" % (i, phenotype, q, k, m, n)
+            if pvalue == 0.0:
+                pvalue = 10e-10
+
+            if pvalue <= 0.5:
+                pvalue = -math.log10(2 * pvalue)
+            else:
+                pvalue = math.log10(2 * (1.0 - pvalue))
+
+            if math.isinf(pvalue):
+                signum = -1 if pvalue < 0 else 1
+                pvalue = signum * -math.log10(10e-10)
+            
+            part_pvalues[phenotype] = pvalue
+        pvalues.append(part_pvalues)
+
+    return pvalues
+
+
 ######################################################################
 #### Available application paths
 ######################################################################
@@ -238,7 +350,19 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
 
     # Prepare graph plotting data
     exp_data = read_exps()
-    in_data, out_data = cluster_data(c, bc_pk, exp_data)    
+    in_data, out_data = cluster_data(c, bc_pk, exp_data)
+    enrichment_pvalues = subtype_enrichment(c, bc_pk, exp_data)
+    js_enrichment_data = []
+    js_enrichment_colors = []
+    for part in enrichment_pvalues:
+        for phenotype in ENRICHMENT_PHENOTYPES:
+            js_enrichment_data.append([phenotype, part[phenotype]])
+            js_enrichment_colors.append(GRAPH_COLOR_MAP[phenotype])
+    enrichment_upper = -math.log10(0.05/30.0)
+    enrichment_lower = math.log10(0.05/30.0)
+    enrich_perc20 = len(js_enrichment_data) / 5
+    enrich_quintiles = [enrich_perc20 * i for i in range(1, 6)]
+
     ratios_mean = np.mean(exp_data.values)
     all_boxplot_data = in_data + out_data
     patients = [exp_data.columns.values[item[0]] for item in all_boxplot_data]
@@ -246,11 +370,12 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
               [patients])
     ptmap = {patient: phenotype for patient, phenotype in c.fetchall()}
     phenotypes = [ptmap[patient] for patient in patients]
-    boxplot_colors = [BOXPLOT_COLOR_MAP[pt] for pt in phenotypes]
+    boxplot_colors = [GRAPH_COLOR_MAP[pt] for pt in phenotypes]
     js_boxplot_data = [[patients[i]] + item[1:] for i, item in enumerate(all_boxplot_data)]
     perc20 = len(in_data) / 5
     quintiles = [perc20 * i for i in range(1, 6)]
     db.close()
+
     return render_template('bicluster.html', **locals())
 
 

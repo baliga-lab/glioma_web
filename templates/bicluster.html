@@ -113,7 +113,62 @@
           { name: 'NA', color: 'grey'}
           ]
       });
-
+      $('#enrichment-graph').highcharts({
+          chart: {type: 'column'},
+          title: {text: 'Quintiles'},
+          xAxis: {
+            plotLines: [
+              {
+                value: {{enrich_quintiles[0]}},
+                color: 'lightGray', dashStyle: 'shortdash',
+                width: 1, zIndex: 3,
+                label: {
+                  text: '20%', style: { color: 'lightGray', fontSize: '8pt' }
+                }
+              },
+              {
+                value: {{enrich_quintiles[1]}},
+                color: 'lightGray', dashStyle: 'shortdash',
+                width: 1, zIndex: 3,
+                label: {
+                  text: '40%', style: { color: 'lightGray', fontSize: '8pt' }
+                }
+              },
+              {
+                value: {{enrich_quintiles[2]}},
+                color: 'lightGray', dashStyle: 'shortdash',
+                width: 1, zIndex: 3,
+                label: {
+                  text: '60%', style: { color: 'lightGray', fontSize: '8pt' }
+                }
+              },
+              {
+                value: {{enrich_quintiles[3]}},
+                color: 'lightGray', dashStyle: 'shortdash',
+                width: 1, zIndex: 3,
+                label: {
+                  text: '80%', style: { color: 'lightGray', fontSize: '8pt' }
+                }
+              }
+            ]},
+          yAxis: {
+            title: {text: 'Enrichment of Subtypes in Quintiles'},
+            plotLines: [{
+              value: {{enrichment_upper}},
+              color: 'red', dashStyle: 'shortdash', width: 1, zIndex: 3,
+            },
+            {
+              value: {{enrichment_lower}},
+              color: 'red', dashStyle: 'shortdash', width: 1, zIndex: 3,
+            }]
+          },
+          series: [
+            { name: 'All', data: {{js_enrichment_data|safe}},
+              showInLegend: false, colorByPoint: true,
+              colors: {{js_enrichment_colors|safe}}
+          }]
+        });
+          
 
         });
     </script>
@@ -124,6 +179,7 @@
                     <div class='text-center'>
                         <div class='bs-callout bs-callout-success'><h3><strong>{{ bicluster | upper }}</strong></h3></div>
                         <div id="boxplot-graph"></div>
+                        <div id="enrichment-graph"></div>
                         <div class='bs-callout bs-callout-default'>
                             <h4>Summary</h4>
                             <div class="container-fluid" style="margin-top: 20px;"></div>
