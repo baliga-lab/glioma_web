@@ -174,6 +174,8 @@ where pt.name <> 'NA'""")
     #print "# columns: %d # cols/part: %d" % (num_columns, cols_per_part)
 
     pvalues = []
+    min_pvalue = 100.0
+    max_pvalue = -100.0
 
     for i in range(NUM_PARTS):
         part_pvalues = {}
@@ -204,10 +206,15 @@ where pt.name <> 'NA'""")
                 signum = -1 if pvalue < 0 else 1
                 pvalue = signum * -math.log10(10e-10)
             
+            if pvalue < min_pvalue:
+                min_pvalue = pvalue
+            if pvalue > max_pvalue:
+                max_pvalue = pvalue
+
             part_pvalues[phenotype] = pvalue
         pvalues.append(part_pvalues)
 
-    return pvalues
+    return pvalues, min_pvalue, max_pvalue
 
 
 ######################################################################
@@ -351,7 +358,7 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     # Prepare graph plotting data
     exp_data = read_exps()
     in_data, out_data = cluster_data(c, bc_pk, exp_data)
-    enrichment_pvalues = subtype_enrichment(c, bc_pk, exp_data)
+    enrichment_pvalues, min_enrichment_pvalue, max_enrichment_pvalue = subtype_enrichment(c, bc_pk, exp_data)
     js_enrichment_data = []
     js_enrichment_colors = []
     for part in enrichment_pvalues:

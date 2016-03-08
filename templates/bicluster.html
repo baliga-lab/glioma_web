@@ -114,7 +114,7 @@
           ]
       });
       $('#enrichment-graph').highcharts({
-          chart: {type: 'column'},
+          chart: {type: 'column', alignTicks: false},
           title: {text: 'Quintiles'},
           xAxis: {
             plotLines: [
@@ -153,6 +153,9 @@
             ]},
           yAxis: {
             title: {text: 'Enrichment of Subtypes in Quintiles'},
+            max: {{max_enrichment_pvalue}},
+            min: {{min_enrichment_pvalue}},
+
             plotLines: [{
               value: {{enrichment_upper}},
               color: 'red', dashStyle: 'shortdash', width: 1, zIndex: 3,
