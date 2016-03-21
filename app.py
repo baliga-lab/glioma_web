@@ -287,6 +287,9 @@ FROM bicluster WHERE name=%s""", [bicluster])
         replication.append(list(i)+[repConvert[i[2]], repPubmed[i[2]]]+tmp1)
 
     # Regulators
+    elements = []
+    elements.append({'data': { 'id': 'bc%d' % bc_pk, 'name': bc_name}, 'classes': 'bicluster' })
+
     regulators = []
     c.execute("""SELECT g.id, g.symbol, tfr.action FROM tf_regulator tfr join gene g on tfr.gene_id=g.id
 WHERE tfr.bicluster_id=%s""", [bc_pk])
@@ -300,6 +303,9 @@ WHERE tfr.bicluster_id=%s""", [bc_pk])
                 known = 'Yes'
         regulators.append(['TF', tf[0], tf[1], tf[2].capitalize(), known])
         tfList.append(tf[1])
+        elements.append({'data': { 'id': 'reg%d' % tf[0], 'name': tf[1] }, 'classes': 'tf' })
+        elements.append({'data': { 'id': 'tfbc%d' % tf[0], 'source': 'reg%d' % tf[0], 'target': 'bc%d' % bc_pk }, 'classes': tf[2] })
+
     c.execute("""SELECT mirna.id, mirna.name, mirna.mir2disease, mirna.hmdd
 FROM mirna_regulator mr join mirna on mirna.id=mr.mirna_id WHERE mr.bicluster_id=%s""", [bc_pk])
     mirnas = list(c.fetchall())
@@ -312,6 +318,9 @@ FROM mirna_regulator mr join mirna on mirna.id=mr.mirna_id WHERE mr.bicluster_id
                 known = 'Yes'
             regulators.append(['miRNA', mirna[0], mirna[1], 'Repressor', known])
             mirnaList.append(mirna[1])
+            elements.append({'data': { 'id': 'reg%d' % mirna[0], 'name': mirna[1]}, 'classes': 'mirna' })
+            elements.append({'data': { 'id': 'mirnabc%d' % mirna[0], 'source': 'reg%d' % mirna[0], 'target': 'bc%d' % bc_pk }, 'classes': 'repressor' })
+
     regulators = sorted(regulators, key=lambda name: name[1])
 
     # Get causal flows with bicluster
@@ -319,6 +328,7 @@ FROM mirna_regulator mr join mirna on mirna.id=mr.mirna_id WHERE mr.bicluster_id
 FROM causal_flow WHERE bicluster_id=%s""", [bc_pk])
     tmp_cf = c.fetchall()
     causalFlows = []
+    
 
     for cf_pk, cf_som_mut_id, cf_reg_id, cf_reg_type, cf_bc_id, cf_leo, cf_mlogp in tmp_cf:
         if cf_reg_type == 'tf':
@@ -338,13 +348,19 @@ FROM causal_flow WHERE bicluster_id=%s""", [bc_pk])
                 c.execute("""SELECT name FROM nci_nature_pathway WHERE id=%s""", [m1[1]])
                 mut = c.fetchone()[0]
             causalFlows.append([mut, g1])
+            elements.append({'data': { 'id': 'mut%d' % cf_som_mut_id, 'name': mut}, 'classes': 'genotype' })
+            elements.append({'data': { 'id': 'cf%d' % cf_pk, 'source': 'mut%d' % cf_som_mut_id, 'target': 'reg%d' % cf_reg_id } })
 
     causalFlows = sorted(causalFlows, key=lambda mutation: mutation[0])
 
     # Hallmarks of Cancer
-    c.execute("""SELECT hm.name FROM hallmark hm join bic_hal bh on hm.id=bh.hallmark_id
+    c.execute("""SELECT hm.id,hm.name FROM hallmark hm join bic_hal bh on hm.id=bh.hallmark_id
 WHERE bh.bicluster_id=%s""", [bc_pk])
-    hallmarks = [ [row[0], convert[row[0]] ] for row in c.fetchall()]
+    hallmarks = []
+    for hm_id, hm_name in c.fetchall():
+        hallmarks.append([hm_name, convert[hm_name] ])
+        elements.append({'data': { 'id': 'hm%d' % hm_id, 'name': hm_name}, 'classes': 'hallmark' })
+        elements.append({'data': { 'id': 'bchm%d' % hm_id, 'source': 'bc%d' % bc_pk, 'target': 'hm%d' % hm_id } })
 
     # GO
     c.execute("""SELECT go_bp.id, go_bp.go_id, go_bp.name FROM bic_go join go_bp on go_bp.id=bic_go.go_bp_id
