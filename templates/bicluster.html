@@ -194,15 +194,15 @@
           style: [
             {
               selector: 'edge',
-              style: { 'width': 3, 'line-color': '#000', 'target-arrow-color': '#000', 'target-arrow-shape': 'triangle' }
+              style: { 'width': 3, 'line-color': '#000', 'opacity': 0.2, 'target-arrow-color': '#000', 'target-arrow-shape': 'triangle' }
             },
             {
               selector: '.repressor',
-              style: { 'width': 3, 'line-color': '#f00', 'target-arrow-color': '#f00', 'target-arrow-shape': 'tee' }
+              style: { 'width': 3, 'line-color': '#f00', 'opacity': 0.2, 'target-arrow-color': '#f00', 'target-arrow-shape': 'tee' }
             },
             {
               selector: '.activator',
-              style: { 'width': 3, 'line-color': '#0f0', 'target-arrow-color': '#0f0', 'target-arrow-shape': 'triangle' }
+              style: { 'width': 3, 'line-color': '#0f0', 'opacity': 0.2, 'target-arrow-color': '#0f0', 'target-arrow-shape': 'triangle' }
             },
  
             {
@@ -237,9 +237,9 @@
     <a href='/'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'></a>
     <div>
       <div class='bs-callout bs-callout-success text-center'><h3><strong>{{ bicluster | upper }}</strong></h3></div>
+      <div id="regulation-graph"></div>
       <div id="boxplot-graph"></div>
       <div id="enrichment-graph"></div>
-      <div id="regulation-graph"></div>
       <div class='bs-callout bs-callout-default'>
         <h4>Summary</h4>
         <div class="container-fluid" style="margin-top: 20px;"></div>
