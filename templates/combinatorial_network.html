@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Combinatorial Network{% endblock %}
+{% block scripts %}
+<script src="static/js/dagre.min.js"></script>
+<script src="static/js/cytoscape.min.js"></script>
+<script src="static/js/cytoscape-dagre.js"></script>
+
+<style>
+  #cy {
+    width: 100%;
+    height: 800px;
+    display: block;
+  }
+</style>
+<script>
+  $(document).ready(function() {
+    var dataElements = {{graph_data|safe}};
+    var cy = cytoscape({
+      container: $('#cy'),
+      elements: dataElements,
+      style: [
+        {
+          selector: 'edge',
+          style: { 'width': 3, 'line-color': '#000', 'opacity': 0.2, 'target-arrow-color': '#000' }
+        },
+        {
+          selector: 'node',
+          style: { 'width': 50, 'text-valign': 'center', 'background-color': '#ccc', 'label': 'data(id)', 'shape': 'triangle', 'padding-top': 5, 'padding-bottom': 5 }
+        },
+        {
+          selector: '.mirna',
+          style: { 'text-valign': 'center', 'width': 50, 'height': 30, 'background-color': '#ccc', 'label': 'data(id)', 'shape': 'diamond', 'padding-left': 0, 'padding-right': 0, 'padding-top': 5, 'padding-bottom': 5 }
+        },
+        {
+          selector: '.sigcoocc',
+          style: { 'line-color': '#f00', 'opacity': 0.2, 'label': 'data(id)' }
+        },
+        {
+          selector: '.crispr',
+          style: { 'background-color': '#ff0' }
+        },
+        {
+          selector: '.in_gbm',
+          style: { 'background-color': '#f00' }
+        },
+        {
+          selector: '.crispr_gbm',
+          style: { 'background-color': '#FF9933' }
+        }
+
+      ]
+    });
+    cy.layout({
+      name: 'cose',
+      componentSpacing: 2
+      //nodeRepulsion: function(node) { return 10; }
+    });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<h2>Combinatorial Network</h2>
+<div id="cy"></div>
+{% endblock %}

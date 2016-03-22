@@ -4,6 +4,7 @@ import traceback as tb
 import logging
 import json
 import os
+import csv
 from functools import wraps
 
 import MySQLdb
@@ -533,6 +534,46 @@ def genecompletions():
     finally:
         db.close()
     return Response(response=json1, status=200, mimetype='application/json')
+
+
+@app.route('/combinatorial_network')
+def combinatorial_network():
+    with open(app.config['NODES_FILE'], 'r') as infile:
+        csvreader = csv.reader(infile, delimiter=',')
+        csvreader.next()
+        nodes = {node_id: {'id': node_id, 'tf_ko': tf_ko, 'in_gbm': in_gbm}
+                 for node_id, tf_ko, in_gbm in csvreader}
+
+    with open(app.config['EDGES_FILE'], 'r') as infile:
+        csvreader = csv.reader(infile, delimiter=',')
+        csvreader.next()
+        edges = []
+        for edge, sig_coocc in csvreader:
+            source, edge_type, target = edge.split()
+            edges.append({'source': source, 'target': target, 'type': edge_type,
+                          'sig_coocc': sig_coocc})
+
+    graph_data = []
+    for node_id, node_data in nodes.items():
+        classes = []
+        if node_id.startswith('hsa-miR'):
+            classes.append('mirna')
+        if node_data['tf_ko'] == 'Yes':
+            classes.append('crispr')
+        if node_data['in_gbm'] == 'Yes':
+            classes.append('in_gbm')
+        if 'in_gbm' in classes and 'crispr' in classes:
+            classes.append('crispr_gbm')
+        graph_data.append({ 'data': { 'id': node_id }, 'classes': ' '.join(classes) })
+
+    for i, edge in enumerate(edges):
+        if edge['sig_coocc'] == 'Yes':
+            graph_data.append({ 'data': { 'id': 'e%d' % i, 'source': edge['source'], 'target': edge['target'] }, 'classes': 'sigcoocc' })
+        else:
+            graph_data.append({ 'data': { 'id': 'e%d' % i, 'source': edge['source'], 'target': edge['target'] } })
+
+    return render_template('combinatorial_network.html', **locals())
+    
 
 if __name__ == '__main__':
     handler = logging.StreamHandler()
