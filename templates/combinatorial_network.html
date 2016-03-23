@@ -55,6 +55,14 @@
       componentSpacing: 2
       //nodeRepulsion: function(node) { return 10; }
     });
+    cy.on('tap', '.gene', function(evt) {
+      var node = evt.cyTarget;
+      window.location.href = "{{url_for('gene', symbol=None)}}/" + node.id();
+    });
+    cy.on('tap', '.mirna', function(evt) {
+      var node = evt.cyTarget;
+      window.location.href = "{{url_for('mirna', symbol=None)}}/" + node.id();
+    });
   });
 </script>
 {% endblock %}

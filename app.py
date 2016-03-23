@@ -494,8 +494,9 @@ def __get_regulators(c, symbol):
     return regs
 
 
+@app.route('/mirna')
 @app.route('/mirna/<symbol>')
-def mirna(symbol=None):
+def mirna(symbol=None, defaults={'symbol': None}):
     # Get biclusters regulated by mirna
     db = dbconn()
     c = db.cursor()
@@ -508,8 +509,9 @@ def mirna(symbol=None):
     return render_template('search.html', gene=symbol, muts={}, regs=regs, bics={})
 
 
+@app.route('/gene')
 @app.route('/gene/<symbol>')
-def gene(symbol=None):
+def gene(symbol=None, defaults={'symbol': None}):
     db = dbconn()
     c = db.cursor()
     c.execute("""SELECT id FROM gene WHERE symbol=%s""", [symbol])
@@ -592,6 +594,9 @@ def combinatorial_network():
         classes = []
         if node_id.startswith('hsa-miR'):
             classes.append('mirna')
+        else:
+            classes.append('gene')
+
         if node_data['tf_ko'] == 'Yes':
             classes.append('crispr')
         if node_data['in_gbm'] == 'Yes':
