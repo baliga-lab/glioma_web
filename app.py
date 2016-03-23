@@ -231,13 +231,6 @@ def unhandled_exception(e):
 def index():
     return render_template('index.html')
 
-@app.route('/gene')
-def gene():
-    return render_template('gene.html')
-
-@app.route('/patient')
-def patient():
-    return render_template('patient.html')
 
 @app.route('/bicluster/<bicluster>')
 def bicluster(bicluster=None):
@@ -412,116 +405,157 @@ def search():
     if not gene:
         return render_template('index.html')
     if gene.find('hsa-')==-1:
-        c.execute("""SELECT * FROM gene WHERE symbol=%s""", [gene])
+        c.execute("""SELECT symbol FROM gene WHERE symbol=%s""", [gene])
         geneData = c.fetchall()
     else:
-        c.execute("""SELECT * FROM mirna WHERE name=%s""", [gene])
+        c.execute("""SELECT name FROM mirna WHERE name=%s""", [gene])
         geneData = c.fetchall()
         type = 'mirna'
+    db.close()
+
     if len(geneData)==0:
         return render_template('index.html')
-    else:
-        # Get causal flows downstream of mutation in gene
-        geneData = geneData[0]
-        muts = {}
-        c.execute("""SELECT * FROM somatic_mutation WHERE mutation_type='gene' AND ext_id=%s""", [geneData[0]])
-        tmp_muts = c.fetchall()
-        if len(tmp_muts)==1:
-            muts['name'] = gene
-            c.execute("""SELECT * FROM causal_flow WHERE somatic_mutation_id=%s""", [tmp_muts[0][0]])
-            tmp_cf = c.fetchall()
-            muts['flows'] = 0
-            muts['regs'] = []
-            muts['tfs'] = []
-            muts['miRNAs'] = []
-            muts['biclusters'] = []
-            muts['data'] = []
-            for cf1 in tmp_cf:
-                g1 = ''
-                if cf1[3]=='tf':
-                    c.execute("""SELECT * FROM tf_regulator WHERE gene_id=%s AND bicluster_id=%s""", [cf1[2], cf1[4]])
-                    if len(c.fetchall())>0:
-                        c.execute("""SELECT symbol FROM gene WHERE id=%s""", [cf1[2]])
-                        g1 = c.fetchall()[0][0]
-                        if not g1 in muts['regs']:
-                            muts['regs'].append(g1)
-                            muts['tfs'].append(g1)
-                else:
-                    c.execute("""SELECT * FROM mirna_regulator WHERE mirna_id=%s AND bicluster_id=%s""", [cf1[2], cf1[4]])
-                    if len(c.fetchall())>0:
-                        c.execute("""SELECT name FROM mirna WHERE id=%s""", [cf1[2]])
-                        g1 = c.fetchall()[0][0]
-                        if not g1 in muts['regs']:
-                            muts['regs'].append(g1)
-                            muts['miRNAs'].append(g1)
-                if not g1=='':
-                    c.execute("""SELECT name, survival, survival_p_value FROM bicluster WHERE id=%s""", [cf1[4]])
-                    b1 = c.fetchall()[0]
-                    if not b1 in muts['biclusters']:
-                        muts['biclusters'].append(b1[0])
-                    c.execute("""SELECT hallmark.name FROM hallmark, bic_hal WHERE bic_hal.bicluster_id=%s AND hallmark.id=bic_hal.hallmark_id""", [cf1[4]])
-                    tmp1 = c.fetchall()
-                    h1 = list(set([convert[i[0]] for i in tmp1]))
-                    h2 = [[i[0],convert[i[0]]] for i in tmp1]
-                    muts['data'].append([gene, g1, b1[0], b1[1], b1[2], h2])
 
-        # Get biclusters regulated by gene
-        regs = {}
-        if type=='gene':
-            c.execute("""SELECT * FROM tf_regulator WHERE gene_id=%s""", [geneData[0]])
-        else:
-            c.execute("""SELECT * FROM mirna_regulator WHERE mirna_id=%s""", [geneData[0]])
-        tmp_regs = c.fetchall()
-        if len(tmp_regs)>0:
-            regs['name'] = gene
-            regs['biclusters'] = len(set([i[1] for i in tmp_regs]))
-            regs['data'] = []
-            # Collect all biclusters downstream regulated by TF or miRNA
-            for reg in tmp_regs:
-                action = 'Rep.'
-                if type=='gene' and reg[3]=='activator':
-                    action = 'Act.'
-                c.execute("""SELECT name, survival, survival_p_value FROM bicluster WHERE id=%s""", [reg[1]])
+    symbol = geneData[0][0]
+    if type == 'gene':
+        return redirect(url_for('gene', symbol=symbol))
+    else:
+        return redirect(url_for('mirna', symbol=symbol))        
+
+
+def __get_muts(c, gene_pk, symbol):
+    # Get causal flows downstream of mutation in gene
+    muts = {}
+    c.execute("""SELECT * FROM somatic_mutation WHERE mutation_type='gene' AND ext_id=%s""", [gene_pk])
+    tmp_muts = c.fetchall()
+    if len(tmp_muts)==1:
+        muts['name'] = symbol
+        c.execute("""SELECT * FROM causal_flow WHERE somatic_mutation_id=%s""", [tmp_muts[0][0]])
+        tmp_cf = c.fetchall()
+        muts['flows'] = 0
+        muts['regs'] = []
+        muts['tfs'] = []
+        muts['miRNAs'] = []
+        muts['biclusters'] = []
+        muts['data'] = []
+        for cf1 in tmp_cf:
+            g1 = ''
+            if cf1[3]=='tf':
+                c.execute("""SELECT * FROM tf_regulator WHERE gene_id=%s AND bicluster_id=%s""", [cf1[2], cf1[4]])
+                if len(c.fetchall())>0:
+                    c.execute("""SELECT symbol FROM gene WHERE id=%s""", [cf1[2]])
+                    g1 = c.fetchall()[0][0]
+                    if not g1 in muts['regs']:
+                        muts['regs'].append(g1)
+                        muts['tfs'].append(g1)
+            else:
+                c.execute("""SELECT * FROM mirna_regulator WHERE mirna_id=%s AND bicluster_id=%s""", [cf1[2], cf1[4]])
+                if len(c.fetchall())>0:
+                    c.execute("""SELECT name FROM mirna WHERE id=%s""", [cf1[2]])
+                    g1 = c.fetchall()[0][0]
+                    if not g1 in muts['regs']:
+                        muts['regs'].append(g1)
+                        muts['miRNAs'].append(g1)
+            if not g1=='':
+                c.execute("""SELECT name, survival, survival_p_value FROM bicluster WHERE id=%s""", [cf1[4]])
                 b1 = c.fetchall()[0]
-                c.execute("""SELECT hallmark.name FROM hallmark, bic_hal WHERE bic_hal.bicluster_id=%s AND hallmark.id=bic_hal.hallmark_id""", [reg[1]])
+                if not b1 in muts['biclusters']:
+                    muts['biclusters'].append(b1[0])
+                c.execute("SELECT hm.name FROM hallmark hm join bic_hal bh on hm.id=bh.hallmark_id  WHERE bh.bicluster_id=%s",
+                          [cf1[4]])
+
                 tmp1 = c.fetchall()
                 h1 = list(set([convert[i[0]] for i in tmp1]))
                 h2 = [[i[0],convert[i[0]]] for i in tmp1]
-                regs['data'].append([gene, action, b1[0], b1[1], b1[2], h2])
+                muts['data'].append([symbol, g1, b1[0], b1[1], b1[2], h2])
+    return muts
 
-        # Get biclusters that gene resides
-        bics = {}
-        if type=='gene':
-            c.execute("""SELECT * FROM bic_gene, bicluster WHERE bic_gene.gene_id=%s AND bic_gene.bicluster_id=bicluster.id""", [geneData[0]])
-            tmp_bics = c.fetchall()
-            if len(tmp_bics)>0:
-                bics['name'] = gene
-                bics['biclusters'] = len(tmp_bics)
-                bics['data'] = []
-                for bic1 in tmp_bics:
-                    c.execute("""SELECT hallmark.name FROM bic_hal, hallmark WHERE bic_hal.bicluster_id=%s AND bic_hal.hallmark_id=hallmark.id""", [bic1[3]])
-                    tmp1 = c.fetchall()
-                    h1 = list(set([convert[i[0]] for i in tmp1]))
-                    h2 = [[i[0],convert[i[0]]] for i in tmp1]
-                    bics['data'].append([bic1[4], bic1[5], bic1[6], bic1[7], bic1[8], h2])
-        db.close()
-        return render_template('search.html', gene=gene, muts=muts, regs=regs, bics=bics)
+
+def __get_regulators(c, symbol):
+    regs = {}
+    tmp_regs = c.fetchall()
+    if len(tmp_regs)>0:
+        regs['name'] = symbol
+        regs['biclusters'] = len(set([i[1] for i in tmp_regs]))
+        regs['data'] = []
+        # Collect all biclusters downstream regulated by TF or miRNA
+        for reg in tmp_regs:
+            action = 'Rep.'
+            if type=='gene' and reg[3] == 'activator':
+                action = 'Act.'
+            c.execute("""SELECT name, survival, survival_p_value FROM bicluster WHERE id=%s""", [reg[1]])
+            b1 = c.fetchall()[0]
+            c.execute("SELECT hm.name FROM hallmark hm join bic_hal bh on hm.id=bh.hallmark_id WHERE bh.bicluster_id=%s",
+                      [reg[1]])
+            tmp1 = c.fetchall()
+            h1 = list(set([convert[i[0]] for i in tmp1]))
+            h2 = [[i[0],convert[i[0]]] for i in tmp1]
+            regs['data'].append([symbol, action, b1[0], b1[1], b1[2], h2])
+    return regs
+
+
+@app.route('/mirna/<symbol>')
+def mirna(symbol=None):
+    # Get biclusters regulated by mirna
+    db = dbconn()
+    c = db.cursor()
+    c.execute("""SELECT id FROM mirna WHERE name=%s""", [symbol])
+    mirna_pk = c.fetchone()[0]
+    muts = __get_muts(c, mirna_pk, symbol)
+    c.execute("""SELECT * FROM mirna_regulator WHERE mirna_id=%s""", [mirna_pk])
+    regs = __get_regulators(c, symbol)
+    db.close()
+    return render_template('search.html', gene=symbol, muts={}, regs=regs, bics={})
+
+
+@app.route('/gene/<symbol>')
+def gene(symbol=None):
+    db = dbconn()
+    c = db.cursor()
+    c.execute("""SELECT id FROM gene WHERE symbol=%s""", [symbol])
+    gene_pk = c.fetchone()[0]
+    muts = __get_muts(c, gene_pk, symbol)
+    c.execute("""SELECT * FROM tf_regulator WHERE gene_id=%s""", [gene_pk])
+    regs = __get_regulators(c, symbol)
+
+    # Get biclusters that gene resides
+    bics = {}
+    c.execute("SELECT * FROM bic_gene bg join bicluster b on bg.bicluster_id=b.id where bg.gene_id=%s", [gene_pk])
+    tmp_bics = c.fetchall()
+    if len(tmp_bics) > 0:
+        bics['name'] = gene
+        bics['biclusters'] = len(tmp_bics)
+        bics['data'] = []
+        for bic1 in tmp_bics:
+            c.execute("SELECT hm.name FROM bic_hal bh join hallmark hm on bh.hallmark_id=hm.id WHERE bh.bicluster_id=%s",
+                      [bic1[3]])
+            tmp1 = c.fetchall()
+            h1 = list(set([convert[i[0]] for i in tmp1]))
+            h2 = [[i[0],convert[i[0]]] for i in tmp1]
+            bics['data'].append([bic1[4], bic1[5], bic1[6], bic1[7], bic1[8], h2])
+    db.close()
+    return render_template('search.html', gene=symbol, muts=muts, regs=regs, bics=bics)
+
 
 @app.route('/network')
 def network():
     return render_template('network.html')
 
+
 @app.route('/about')
 def about():
     return render_template('about.html')
+
 
 @app.route('/download')
 def download():
     return render_template('download.html')
 
+
 @app.route('/citation')
 def citation():
     return render_template('citation.html')
+
 
 @app.route('/genecompletions')
 def genecompletions():
