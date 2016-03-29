@@ -383,8 +383,8 @@ WHERE bic_go.bicluster_id=%s""", [bc_pk])
     ratios_mean = np.mean(exp_data.values)
     all_boxplot_data = in_data + out_data
     patients = [exp_data.columns.values[item[0]] for item in all_boxplot_data]
-    c.execute("""select p.name, pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in %s""",
-              [patients])
+    c.execute("""select p.name, pt.name from patient p join phenotypes pt on p.phenotype_id=pt.id where p.name in (%s)""" %
+              ','.join(map(lambda p: '\'%s\'' % p, patients)))
     ptmap = {patient: phenotype for patient, phenotype in c.fetchall()}
     phenotypes = [ptmap[patient] for patient in patients]
     boxplot_colors = [GRAPH_COLOR_MAP[pt] for pt in phenotypes]
