@@ -91,7 +91,7 @@ def submat_data(submat, col_indexes):
 def cluster_data(cursor, cluster_id, df):
     patient_map = {name: index
                    for index, name in enumerate(df.columns.values)}
-    gene_map = {name: index for index, name in enumerate(df.index)}
+    gene_map = {name.upper(): index for index, name in enumerate(df.index)}
 
     cursor.execute("""select g.symbol from bic_gene bg
 join gene g on bg.gene_id=g.id where bicluster_id=%s""", [cluster_id])
@@ -108,7 +108,7 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
     excluded_patients = [row[0] for row in cursor.fetchall()]
 
 
-    gene_indexes = sorted([gene_map[g] for g in genes])
+    gene_indexes = sorted([gene_map[g.upper()] for g in genes])
     patient_indexes = sorted([patient_map[p] for p in patients])
     ex_patient_indexes = sorted([patient_map[p] for p in excluded_patients])
 
@@ -123,7 +123,7 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
 def subtype_enrichment(cursor, cluster_id, df):
     patient_map = {name: index
                    for index, name in enumerate(df.columns.values)}
-    gene_map = {name: index for index, name in enumerate(df.index)}
+    gene_map = {name.upper(): index for index, name in enumerate(df.index)}
 
     cursor.execute("""select g.symbol from bic_gene bg
 join gene g on bg.gene_id=g.id where bicluster_id=%s""", [cluster_id])
@@ -139,7 +139,7 @@ join patient p on bp.patient_id=p.id where bicluster_id=%s""",
                    [cluster_id])
     excluded_patients = [row[0] for row in cursor.fetchall()]
 
-    gene_indexes = sorted([gene_map[g] for g in genes])
+    gene_indexes = sorted([gene_map[g.upper()] for g in genes])
 
     # above is exactly like boxplot
     # now make a phenotype map
