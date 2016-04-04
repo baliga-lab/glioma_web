@@ -21,13 +21,13 @@ sudo pip install rpy2
 ```
 
 ## Database setup
-# Open mysql
+### Open mysql
 mysql -u <user_name> -p
-# Make the database
+### Make the database
 CREATE DATABASE glioma;
-# Create structure of database
+### Create structure of database
 cat data/createDatabase.sql | mysql -u <user_name> -p
-# Enter all data (sql file for database needs to be downloaded from website).
+### Enter all data (sql file for database needs to be downloaded from website).
 zcat ../glioma_web_data/glioma.sql.gz | mysql -u <user_name> -p
 
 see settings.cfg, create MySQL database and adjust user/database settings
