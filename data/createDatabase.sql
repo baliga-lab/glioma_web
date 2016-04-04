@@ -26,9 +26,12 @@ CREATE TABLE bic_gene (
     FOREIGN KEY (gene_id) REFERENCES gene (id)
 );
 
+create table phenotypes (id integer primary key auto_increment, name varchar(50) not null, long_name varchar(50));
+
 CREATE TABLE patient (
     id integer unsigned NOT NULL AUTO_INCREMENT,
     name varchar(50),
+    phenotype_id integer references phenotypes,
     PRIMARY KEY (id),
     KEY idx_name (name)
 );
