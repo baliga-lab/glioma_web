@@ -35,4 +35,4 @@ accordingly
 
 ## Run in Development mode
 
-GLIOMA_WEB=settings.cfg ./app.py
+GLIOMA_SETTINGS=settings.cfg ./app.py
