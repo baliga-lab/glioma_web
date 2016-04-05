@@ -14,9 +14,23 @@
     <style>
       #regulation-graph {
         width: 100%;
-        height: 400px;
+        height: 300px;
         left: 0px;
         top: 0px;
+      }
+      #boxplot-graph {
+        width: 60%;
+        height: 250px;
+        left: 0px;
+        top: 0px;
+        float: left;
+      }
+      #enrichment-graph {
+        width: 40%;
+        height: 250px;
+        left: 0px;
+        top: 0px;
+        float: left;
       }
     </style>
 
@@ -55,7 +69,7 @@
       $('#boxplot-graph').highcharts({
         chart: {type: 'boxplot'},
         legend: {enabled: true},
-        title: {text: 'Patient Tumors'},
+        title: {text: ''},
         xAxis: {
           plotLines: [{
             value: {{in_data|length}}, color: 'red', dashStyle: 'shortdash',
@@ -127,8 +141,8 @@
           ]
       });
       $('#enrichment-graph').highcharts({
-          chart: {type: 'column', alignTicks: false},
-          title: {text: 'Quintiles'},
+          chart: {type: 'column', alignTicks: false}, 
+          title: {text: ''},
           xAxis: {
             plotLines: [
               {
@@ -198,16 +212,16 @@
             },
             {
               selector: '.repressor',
-              style: { 'width': 3, 'line-color': '#f00', 'opacity': 0.2, 'target-arrow-color': '#f00', 'target-arrow-shape': 'tee' }
+              style: { 'width': 3, 'line-color': '#f00', 'opacity': 0.3, 'target-arrow-color': '#f00', 'target-arrow-shape': 'tee' }
             },
             {
               selector: '.activator',
-              style: { 'width': 3, 'line-color': '#0f0', 'opacity': 0.2, 'target-arrow-color': '#0f0', 'target-arrow-shape': 'triangle' }
+              style: { 'width': 3, 'line-color': '#0f0', 'opacity': 0.3, 'target-arrow-color': '#0f0', 'target-arrow-shape': 'triangle' }
             },
  
             {
               selector: '.genotype',
-              style: { 'background-color': '#d0d', 'label': 'data(name)', 'shape': 'polygon', 'shape-polygon-points': '-0.6 -1 0 0 0.6 -1 0 1' }
+              style: { 'background-color': '#d0d', 'label': 'data(name)', 'shape': 'polygon', 'shape-polygon-points': '-1 -1 0 -0.45 1 -1 0 1' }
             },
             {
               selector: '.tf',
@@ -233,19 +247,33 @@
     </script>
 {% endblock %}
 {% block content %}
-    <div class="container-fluid" style="margin-top: 20px;"></div>
-    <a href='/'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'></a>
+    <div class="container-fluid" style="margin-top: 40px;"></div>
     <div>
       <div class='bs-callout bs-callout-success text-center'><h3><strong>{{ bicluster | upper }}</strong></h3></div>
-      <div id="regulation-graph"></div>
-      <div id="boxplot-graph"></div>
-      <div id="enrichment-graph"></div>
+      <div class='bs-callout bs-callout-default'>
+          <h4>Bicluster Network Summary <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#bicNet' style='color:#f00;)'></span></h4>
+                    <div id='bicNet' class='collapse' style='text-align:justify;'> <div align='center'><b>Legend:</b><br> <span class="glyphicon glyphicon-stop" style='color:#d0d;'></span> = Somatically mutated gene/pathway</br>
+              <span class="glyphicon glyphicon-stop" style='color:#f00'></span> = TF; <span class="glyphicon glyphicon-stop" style='color:#ec5'></span> = miRNA; (Regulator edges: <span class="glyphicon glyphicon-arrow-up" style='color:#0f0; opacity:0.7;'></span> = Activation; <span style='color:#f00; opacity:0.7;'><b>T</b></span> = Repression)<br> <span class="glyphicon glyphicon-stop" style='color:#aaa'></span> = Bicluster<br> <span class="glyphicon glyphicon-stop" style='color:#0f0'></span> = Hallmark of Cancer</div>
+      </div>
+          <div id="regulation-graph"></div>
+      </div>
       <div class='bs-callout bs-callout-default'>
         <h4>Summary</h4>
-        <div class="container-fluid" style="margin-top: 20px;"></div>
+        <div align='center'>
+        <table width='100%'>
+            <tr>
+                    <td width='60%' align='center'><span data-toggle='collapse' data-target='#tumorExp'><b>Bicluster Expression of Patient Tumors</b></span> <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#tumorExp' style='color:#f00;)'></span>
+                    <div id='tumorExp' class='collapse' style='text-align:justify;'>Expression of genes from patient tumors in bicluster on left side of red dashed line and out of bicluster on right of red dashed line. Each patient tumor is represented as a boxplot, ordered by their median expression for the bicluster genes (smallest to largest) and colored according to it's GBM subtype.</div></td>
+                <td width='40%' align='center'><span data-toggle='collapse' data-target='#enrich'><b>Enrichment of Tumor Subtypes in Qunitiles</b></span> <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#enrich' style='color:#f00;)'></span>
+                    <div id='enrich' class='collapse' style='text-align:justify;'>Patient tumors are sorted as on the left and broken into quintiles following the dashed grey lines. Then each quintile is tested for enrichment of each tumor subtype. The deviation from zero indicate -log10(enrichment p-value), and positive values indicate over-enrichment and negative values underenrichment.</div></td>
+                </tr>
+            </table>
+            <div id="boxplot-graph"></div>
+            <div id="enrichment-graph"></div>
+        </div>
         <table class='table table-bordered table-striped text-center'>
           <tr>
-            <th class='text-center'>Genes</th><th class='text-center'>Patient Tumors</th><th class='text-center'>FPC Var. Exp. (Perm. <em>p</em>-value)</th><th class='text-center'>Survival (<em>p</em>-value)</th><th class='text-center'>Independent Replication</th>
+              <th class='text-center'>Genes</th><th class='text-center'>Patient Tumors</th><th class='text-center'>FPC Var. Exp.<br>(Perm. <em>p</em>-value)</th><th class='text-center'>Survival<br>(<em>p</em>-value)</th><th class='text-center'>Independent Replication</th>
           </tr>
           <tr>
             <td><a href='#genes'>{{genes|length}}</a></td><td><a href='#tumors'>{{tumors|length}}</a></td>
@@ -262,7 +290,7 @@
         </table>
         <table class='table table-bordered table-striped text-center'>
           <tr>
-            <th class='text-center'>Regulators</th><th class='text-center'>Causal Flows</th><th class='text-center'>Enriched GO BPs</th><th class='text-center'>Enriched Hallmarks of Cancer</th>
+              <th class='text-center'>Regulators</th><th class='text-center'>Causal Flows</th><th class='text-center'>Enriched GO BPs</th><th class='text-center'>Enriched<br>Hallmarks of Cancer</th>
           </tr>
           <tr>
             <td><a href='#regulators'>{{ regulators | count }}</a></td><td><a href='#causal'>{{ causalFlows | count }}</a></td><td><a href='#gobp'>{{ gobps | count }}</a></td><td><a href='#hallmarks'>{{ hallmarks | count }}</a></td>
@@ -355,19 +383,21 @@
 
 <div class='bs-callout bs-callout-default' id='hallmarks'>
   
+  <h4>Enriched Hallmarks of Cancer</h4>
   <div class="container-fluid" style="margin-top: 20px;"></div>
   <div class="text-left">
     <table align='center'>
       <tr>
-        <td><h4>Enriched Hallmarks of Cancer</h4>
-          <div class="container-fluid" style="margin-top: 20px;"></div>
+        <td>
+            <center><span style='font-weight:bold;color:#f00;font-size:14pt;'>Enriched Hallmarks</span></center>
+          <div class="container-fluid" style="margin-top: 10px;"></div>
           <ul>
             {% for h1 in hallmarks %} 
             <li><img src='/static/images/{{ h1[1] }}' width='20' alt='{{ h1[0] }}' title='{{ h1[0] }}'> {{ h1[0] }}</li>
             {% endfor %}
         </ul></td>
         <td><div class="container-fluid" style="margin-left: 15px;"></div></td>
-        <td align='center'><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></td>
+        <td align='center'><span style='color:#f00;font-weight:bold;font-size:14pt;'>Legend:</span><br>&nbsp;<br><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></td>
       </tr>
     </table>
   </div>

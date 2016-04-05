@@ -1,12 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Index{% endblock %}
 {% block content %}
-<div class="container-fluid" style="margin-top: 20px;">
-    <a href='/'><img class='displayed' src='/static/images/gbmSygnalNetwork.gif'></a>
-        <center>
-            <h2>Download:</h2>
-        </center>
-    </div>
+<div class="container-fluid" style="margin-top: 40px;">
+<div class='bs-callout bs-callout-default'><h4>Downloads</h4>
+    <ol>
+        <li><h4>cMonkey<sub>2</sub></h4></li>
+        <ul>
+        <li><a href='https://github.com/baliga-lab/cmonkey2'>cMonkey<sub>2</sub> source code</a> - Clone the latest release of cMonkey<sub>2</sub> from GitHub.</li>
+        <br>
+        <li><a href='/static/gbm.cMonkey2.tgz'>Example cMonkey<sub>2</sub> run</a> - When expanded and all dependencies of running cMonkey<sub>2</sub> are met this will run with 2,000 genes (full runs in paper have 9,138 genes). Requires that paths to cMonkey<sub>2</sub> be set properly. We added symbolic links to the config and cmviewer directories into the gbm.cMonkey2 directory and were able to run to completion.</li>
+        <ul>
+            <li>Currently configured to run with PITA set-enrichment (miRNA). To reconfigure for TargetScan (miRNA) or TF-target gene databaset (TF) simply change the gbmTCGA.ini file to point at the appropriate JSON file.</li>
+        </ul>
+        </ul>
+        <br>
+        <li><h4>TF-target gene database</h4></li>
+        <ul>
+            <li><a href='http://tfbsdb.systemsbiology.net/download'>TF-target gene database</a> - We provide the TF target gene predictions as separate CSV files for each TF motif. We also provide a conversion file that maps motif names to their cognate TF.</li>
+        </ul>
+        <br>
+        <li><h4>SYGNAL pipeline</h4></li>
+        <ul>
+        <li><a href='https://github.com/baliga-lab/sygnal'>SYGNAL pipeline source code</a> - The SYGNAL pipeline is designed to be cloned into a completed cMonkey2 run directory. It will then run the SYGNAL pipeline using the cMonkey2 result database and put all the results into 'sygnal/output' directory, which it will create if not already present. There is fairly through checkpointing as the full SYGNAL pipeline can take some time to run.</li>
+        <br>
+        <li><a href='/static/gbm.sygnal.tgz'>Example SYGNAL pipeline run</a> - When expanded and placed inside a completed cMonkey<sub>2</sub> (works in example run above). Need to meet all dependencies of running SYGNAL pipeline.</li>
+       </ul>
+    </ol>
+</div>
 {% endblock %}
 {% block bottom %}
 {% endblock %}

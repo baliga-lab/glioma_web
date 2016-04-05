@@ -17,11 +17,19 @@
                     <div class="container-fluid" style="margin-top: 20px;"></div>
                     <img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'>
                     <div class='text-center bs-callout bs-callout-default'>
-                        <h4>Search for gene or somatic mutation:</h4>
+                        <h4>Search for gene or somatic mutation: <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#searchHelp' style='color:#600;)'></span></h4>
+                        <center><div id='searchHelp' class='collapse' style='text-align:justify;width:500px;'>Search for genes or regulators from the gbmSYGNAL network by using autocomplete in the search field based on your input. For example input IRF and it brings up all the possbile matches. Then select the correct search term from the drop down list and click the Search button to find all the somatic mutations, regulators or bilcusters with that gene/miRNA.</div></center>
                         <form id="searchform" action="search" method="get">
                             <input id="term" name="gene" type="search" size=35>
                             <button type="submit" class="btn btn-danger" value="search"><span class="glyphicon glyphicon-search" aria-hiddne="true"></span> Search</button>
                         </form>
+                        <br>
+                        (Examples: somatic mutation = <a href='/gene/IRF1'>NF1</a>, regulator = <a href='/gene/IRF1'>IRF1</a> or <a href='/mirna/hsa-miR-128'>hsa-miR-128</a>, and gene in bicluster = <a href='/gene/HLA-A'>HLA-A</a>)
+                    </div>
+                     <div class='text-center bs-callout bs-callout-default'>
+                        <h4>Explore Combinatorial Regulatory Network for GBM: <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#combNet' style='color:#600;)'></span></h4>
+                        <center><div id='combNet' class='collapse' style='text-align:justify;width:500px;'>Explore an interactive network of combinatorial TF and miRNA regulatory interactions.</div></center>
+                        <a href='/combinatorial_network'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/combNet.gif'></a>
                     </div>
 {% endblock %}
 

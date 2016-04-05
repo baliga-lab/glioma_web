@@ -8,7 +8,7 @@
 <style>
   #cy {
     width: 100%;
-    height: 800px;
+    height: 500px;
     display: block;
   }
 </style>
@@ -21,7 +21,7 @@
       style: [
         {
           selector: 'edge',
-          style: { 'width': 3, 'line-color': '#000', 'opacity': 0.2, 'target-arrow-color': '#000' }
+          style: { 'width': 3, 'line-color': '#000', 'opacity': 0.5, 'target-arrow-color': '#000', 'label': '' }
         },
         {
           selector: 'node',
@@ -33,7 +33,7 @@
         },
         {
           selector: '.sigcoocc',
-          style: { 'line-color': '#f00', 'opacity': 0.2, 'label': 'data(id)' }
+          style: { 'line-color': '#f00', 'opacity': 0.5, 'label': '' }
         },
         {
           selector: '.crispr',
@@ -68,6 +68,24 @@
 {% endblock %}
 
 {% block content %}
-<h2>Combinatorial Network</h2>
+<div class="container-fluid" style="margin-top: 50px;"></div>
+<div class='bs-callout bs-callout-default'>
+    <h4>Combinatorial Network <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#combNet' style='color:#f00;)'></span></h4>
+    All nodes on this network are either TFs or miRNAs, the edges link TFs and miRNAs found together in at least one combinatorial regulatory model, and legend describes additional information overlays. <b>Scroll to zoom in or out</b>, and then <b>click and drag to move the view space to the portion of the network you wish to view</b>. The <b>labels are clickable</b> and will take you to the gbmSYGNAL network components containing the regulator.
+    <div id='combNet' class='collapse' style='text-align:justify;'>
+        <br>&nbsp;<br><b>Legend:</b><br> <u>Regulator Shapes</u><br><span style='font-size:15pt;color:#aaa;'>&#9650;</span> = TF</br>
+        <span style='font-size:20pt;color:#aaa;'>&diams;</span> = miRNA<br>
+        &nbsp;<br>
+        <u>Fill</u><br>
+        <span class="glyphicon glyphicon-stop" style='color:#f00'></span> = GBM associated<br>
+        <span class="glyphicon glyphicon-stop" style='color:#ff0;'></span> = CRISPR-Cas9 confirmed<br>
+        <span class="glyphicon glyphicon-stop" style='color:#f93'></span> = CRISPR-Cas9 confirmed & GBM associated<br>
+        
+        &nbsp;<br>
+        <u>Edges</u><br>
+        <span class="glyphicon glyphicon-minus" style='color:#aaa'></span> = Co-occurence in at least one combination<br>
+        <span class="glyphicon glyphicon-minus" style='color:#f00;'></span> = Co-occurence in at least one combination and significant co-occurence of binding sites
+    </div>
+</div>
 <div id="cy"></div>
 {% endblock %}

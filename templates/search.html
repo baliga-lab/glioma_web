@@ -47,12 +47,12 @@
   </script>
 {% endblock %}
 {% block content %}
-                    <div class="container-fluid" style="margin-top: 20px;"></div>
+                    <div class="container-fluid" style="margin-top: 40px;"></div>
                     <div class='text-center'>
-                        <a href='/'><img class='displayed' alt='gbmSYGNAL Transcriptional Regulaotry Network' src='/static/images/gbmSygnalNetwork.gif'></a>
                         <div class='bs-callout bs-callout-success'><h3><strong>Searched for: &nbsp;{{ gene }}</strong></h3></div>
                         <div class='bs-callout bs-callout-default'>
-                            <h4>{{ gene }} mutations modulate:</h4>
+                            <h4>{{ gene }} mutations modulate: <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#mut' style='color:#f00;font-size=10pt;'></span></h4>
+                            <div id='mut' class='collapse' style='text-align:justify;'>List of mutations that drive a causal flow containing a regulator followed by a downstream bicluster. Survival is the Cox proportional hazards regression of the bicluster eigengene versus paitent survival. Hallmark(s) is the hallmarks of cancer associated with the bicluster genes. Legend for hallmarks:<br><center><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></center></div>
                             {% if muts['data']|length>0 %}
                             <table class='table table-bordered table-striped text-center'>
                                 <tr>
@@ -82,7 +82,8 @@
                             {% endif %}
                         </div>
                         <div class='bs-callout bs-callout-default'>
-                            <h4>{{ gene }} regulates:</h4>
+                            <h4>{{ gene }} regulates: <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#reg' style='color:#f00;font-size=10pt;'></span></h4>
+                            <div id='reg' class='collapse' style='text-align:justify;'>List of biclusters regulated by the regulator that was searched. Next to the regulator in parentheses is the regulators mechanism of action (<span style='color:#0f0;font-weight:bold;'>Act. = activator</span> and <span style='color:#f00;font-weight:bold;'>Rep. = repressor</span>). Survival is the Cox proportional hazards regression of the bicluster eigengene versus paitent survival. Hallmark(s) is the hallmarks of cancer associated with the bicluster genes. Legend for hallmarks:<br><center><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></center></div>
                             {% if regs|length>0 %}
                             <table class='table table-bordered table-striped text-center'>
                                 <tr>
@@ -112,7 +113,9 @@
                         </div>
 
                         <div class='bs-callout bs-callout-default'>
-                            <h4>Biclusters containing {{ gene }}:</h4>
+                            <h4>Biclusters containing {{ gene }}: <span class="glyphicon glyphicon-info-sign" data-toggle='collapse' data-target='#bic' style='color:#f00;font-size=10pt;'></span></h4>
+                            <div id='bic' class='collapse' style='text-align:justify;'>List of biclusters that contain the genes that was searched. Var. Exp. FPC is the variance explained by the first principal component and is a good measure of bicluster co-expression. Survival is the Cox proportional hazards regression of the bicluster eigengene versus paitent survival. Hallmark(s) is the hallmarks of cancer associated with the bicluster genes. Legend for hallmarks:<br><center><img src='/static/images/legend.jpg' alt='Hallmarks of Cancer' width=300><br><small><a href='http://www.ncbi.nlm.nih.gov/pubmed/21376230'>Hanahan and Weinberg, Cell 2011</a></small></center></div>
+
                             {% if bics|length>0 %}
                             <table class='table table-bordered table-striped text-center'>
                                 <tr>
@@ -125,7 +128,7 @@
                             <table id='biclusters' class='table table-bordered text-center'>
                                 <thead>
                                     <tr>
-                                        <td>Bicluster</td><td>Var. Exp. FPC (Perm. <i>p</i>-value)</td><td>Survival (<i>p</i>-value)</td><td>Hallmark(s)</td>
+                                        <td>Bicluster</td><td>Var. Exp. FPC<br>(Perm. <i>p</i>-value)</td><td>Survival<br>(<i>p</i>-value)</td><td>Hallmark(s)</span></td>
                                     </tr>
                                 </thead>
                                 <tbody>

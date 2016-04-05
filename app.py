@@ -566,7 +566,10 @@ def genecompletions():
     try:
         c = db.cursor()
         c.execute("""SELECT symbol FROM gene WHERE symbol LIKE %s""", [str(term)+'%'])
-        json1 = json.dumps([i[0] for i in c.fetchall()])
+        tmpGene = [i[0] for i in c.fetchall()]
+        c.execute("""SELECT name FROM mirna WHERE name LIKE %s""", [str(term)+'%'])
+        tmpMiRNA = [i[0] for i in c.fetchall()]
+        json1 = json.dumps(tmpGene+tmpMiRNA)
     finally:
         db.close()
     return Response(response=json1, status=200, mimetype='application/json')

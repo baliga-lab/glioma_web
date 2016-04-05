@@ -29,6 +29,14 @@ th {
 .bs-callout+.bs-callout {
     margin-top: -5px;
 }
+.panel-default {
+    border-color: #600;
+}
+.panel-default > .panel-heading {
+    border-color: #600;
+    background-color: #600;
+    color: #fff;
+}
 .bs-callout-default {
     border-left-color: #600;
 }

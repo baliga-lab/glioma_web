@@ -1,11 +1,107 @@
 {% extends "base.html" %}
 {% block title %}About{% endblock %}
+{% block scripts %}
+<!-- Javascript to modify tables -->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var shiftWindow = function() { scrollBy(0, -50) };
+            window.addEventListener("hashchange", shiftWindow);
+            function load() { if (window.location.hash) shiftWindow(); } });
+    </script>
+{% endblock %}
 {% block content %}
-<div class="container-fluid" style="margin-top: 20px;">
-    <a href='/'><img class='displayed' src='/static/images/gbmSygnalNetwork.gif'></a>
-    <center>
-        <h2>About</h2>
-        <p>About...</p>
-    </center>
+<div class="container-fluid" style="margin-top: 40px;"></div>
+<div class='bs-callout bs-callout-default'><h4>Outline</h4>
+    <ol>
+        <li><a href='#about'>About</a></li>
+        <li><a href='#citation'>Citation</a></li>
+        <li><a href='#sygnal'>Constructing gbmSYGNAL network</a></li>
+        <ul>
+            <li><a href='#fig1'>Figure 1</a> - Set enrichment and cMonkey<sub>2</sub></li>
+            <li><a href='#fig2'>Figure 2</a> - SYGNAL pipeline and gbmSYGNAL construction</li>
+            <li><a href='#fig3'>Figure 3</a> - Data input and output from SYGNAL pipeline for gbmSYGNAL network</li>
+        </ul>
+        <li><a href='#combNet'>Combinatorial regulatory interaction network</a></li>
+        <ul>
+            <li><a href='#fig4'>Figure 4</a> - Distribution of number of significant combinatorial interactions</li>
+        </ul>
+        <li><a href='#suppRef'>Supporting references</a></li>
+        <li><a href='#contact'>Contact Information</a></li>
+    </ol>
+</div>
+<div id='about' class='bs-callout bs-callout-default'><h4>About</h4>
+    This website was developed to provides easy access to the gbmSYGNAL network by allowing searching of <a href='/'>somatically mutated genes, regulators, or genes in biclusters</a>. In addition there is a veiw of the <a href='/combinatorial_network'>combinatorial network</a> that also can be used to link through to regulators present in combinatorial reglatory interactions.
+</div>
+<div id='citation' class='bs-callout bs-callout-default'><h4>Citation</h4>
+    Plaisier CL, O'Brien S, Bernard B, Reynolds S, Simon Z, Toledo CM, Ding Y, Reiss DJ, Paddison PJ, Baliga NS. <b>A map of disease-relevant gene regulatory interactions for glioblastoma multiforme.</b> <i>In process.</i>    
+</div>
+<div id='sygnal' class='bs-callout bs-callout-default'><h4>Constructing gbmSYGNAL Network</h4>
+We developed the SYstems Genetics Network AnaLysis (SYGNAL) pipeline to decipher transcriptional regulatory networks from multi-omic and clinical patient data, and applied these tools to 422 patients with glioblastoma multiforme (GBM). The resulting gbmSYGNAL network identified 112 somatically mutated genes or pathways and predicted that these mutations act through 74 transcription factors (TFs; 58 novel) and 37 miRNAs (9 novel) to dysregulate 237 distinct co-regulated gene modules associated with patient survival or oncogenic processes. 
+
+We have used patient data for glioblastoma multiforme (GBM) to develop the SYstems Genetics Network AnaLysis (SYGNAL) pipeline by integrating the methodology for constructing a mechanistic <a href='http://tfbsdb.systemsbiology.net'>TF-target gene database</a> with previously developed multi-omics data mining methodologies, including (i) dimensionality reduction by discovering co-regulated gene modules (<a href='https://github.com/baliga-lab/cmonkey2'>cMonkey<sub>2</sub></a>; <a href='http://www.ncbi.nlm.nih.gov/pubmed/25873626'>Reiss et al., 2015</a>), (ii) inference of mechanistic miRNA regulatory network (<b>Figure 1</b>; <a href='http://cmrn.systemsbiology.net'>framework for inference of regulation by miRNAs (FIRM)</a> integrated into cMonkey2; <a href='http://www.ncbi.nlm.nih.gov/pubmed/22745231'>Plaisier et al., 2012</a>), and (iii) mapping of causal effects from somatic mutations to regulators to their downstream target genes (<a href='https://labs.genetics.ucla.edu/horvath/aten/NEO/'>network edge orienting (NEO)</a>; <a href='http://www.ncbi.nlm.nih.gov/pubmed/18412962'>Aten et al., 2008</a>).<br>&nbsp;<br>
+
+<div id='fig1' class='panel panel-default'>
+    <div class='panel-heading'><b>Figure 1.</b> TF or miRNA-target gene predictions were compiled into a database (TF-target gene database described in A and miRNA-target gene databases are PITA and TargetScan). Mechanistically based TF and miRNA mediated regulation were inferred by integrating the target gene databases into the newly developed set enrichment scoring module for cMonkey2 which systematically retains and adds co-expressed target genes of an enriched regulator.</div>
+    <div class='panel-body'>
+        <center><img src='/static/images/setEnrichment.png' alt='Set Enrichment in cMonkey'></center>
+    </div>
+</div>
+
+<br>&nbsp;<br>The SYGNAL pipeline constructs a TRN in three steps (<b>Figure 2</b>):  1) simultaneous dimensionality reduction and mechanistic inference of regulation by a TF of miRNA for a bicluster of genes and conditions (patients are considered conditions in the case of cancer); 2) filter biclusters by validating co-expression and ensuring disease relevance; and 3) causal inference that infers relationships linking somatic mutations to a TF or miRNA to the regulation of a bicluster. We applied the SYGNAL pipeline to multi-omics data from <a href='https://tcga-data.nci.nih.gov/tcga/'>The Cancer Genome Atlas (TCGA)</a> for GBM across 422 patients and 9 normal post-mortem controls to infer an integrated TF and miRNA regulatory network (<a href='http://www.ncbi.nlm.nih.gov/pubmed/24120142'>Brennan et al., 2013</a>). The TCGA multi-omics data were refined at each omic level to enhance the signal-to-noise ratio.<br>&nbsp;<br>
+
+<div id='fig2' class='panel panel-default'>
+    <div class='panel-heading'><b>Figure 2.</b> Regulatory influences from target gene databases (this study) and patient tumor data (from The Cancer Genome Atlas (TCGA)) are analyzed sequentially in three steps by a suite of interconnected algorithms in the SYGNAL pipeline. The gbmSYGNAL TRN was constructed by using the SYGNAL pipeline to analyze tumor biopsy data from 422 patients with different subtypes of GBM. The resulting TRN is a predictive map that implicates specific somatic mutations in causally modulating the expression of a TF(s) or miRNA(s) that in turn regulates genes (within a bicluster) that are putatively associated with a hallmark of cancer. A summary of the counts for each feature in the gbmSYGNAL TRN is shown on the left.</div>
+    <div class='panel-body'>
+        <center><img src='/static/images/sygnal.png' alt='SYstems Genetics Network AnaLysis (SYGNAL)'></center>
+    </div>
+</div>
+
+The integrated analysis of all these multi-omics data with the SYGNAL pipeline and subsequent filtering discovered 500 biclusters (out of 1,830 biclusters) of genes that were significantly co-expressed across different subsets of patient tumors (in the TCGA and at least one independent GBM cohort) and were disease-relevant (significantly associated with patient survival or a hallmark of cancer; <b>Figure 3A</b>). The SYGNAL pipeline also inferred causal influences for somatically mutated genes and pathways on the expression of TFs and miRNAs, which in turn were predicted to modulate the expression of co-regulated genes within one of the 500 biclusters (i.e., somatic mutation &rarr; TF or miRNA &rarr; bicluster; <b>Figure 3B and C</b>).<br>&nbsp;<br>
+
+<div id='fig3' class='panel panel-default'>
+    <div class='panel-heading'><b>Figure 3.</b> Diagram of flow and input for SYGNAL pipeline and summary of TF and miRNA regulatory predictions for gbmSYGNAL TRN. <b>A.</b> Input data from TCGA and independent validation cohorts were integrated into the SYGNAL pipeline. cMonkey2 was used to reduce dimensionality and discover mechanistic TF and miRNA regulatory predictions. Biclusters were then filtered based on:  1) significant co-expression and validation in at least one independent cohort; and 2) either significant association of bicluster eigengene with patient survival and validation in independent cohort in same direction, or enrichment of the bicluster genes with a hallmark of cancer. Then, NEO was used to infer causal flows of information from a mutation or mutated pathway to a TF or miRNA to a bicluster. The enrichment of a motif in the promoters of bicluster genes was tested using AME and used as a secondary method to discover causal and mechanistic TF regulators. <b>B.</b> Summary of transcription factor (TF) to bicluster regulatory predictions from SYGNAL pipeline and number of TFs discovered at each step. First, cMonkey2 was used to discover mechanistic regulatory predictions. Then each TF was expanded to a list of family members and only those with a significant correlation with the bicluster eigengene were retained. Causal TFs were discovered through NEO. Finally, causal and mechanistic TFs were discovered by overlapping the cMonkey2 and NEO predicted TF regulators or through significant enrichment of causal TF motif instances in the promoters of bicluster genes. <b>C.</b> Summary of miRNA to bicluster regulatory predictions and number of miRNAs discovered at each step. Mechanistic miRNA regulatory predictions were discovered using cMonkey2 and only those miRNAs which were anti-correlated with the bicluster eigengene were retained. Causal miRNA regulators were required to have a negative effect of the miRNA on a bicluster. Finally, causal and mechanistic miRNA regulators were discovered by overlapping the cMonkey2 and NEO discovered miRNA regulators (* overlapping causal and mechanistic miRNAs were not required to be predicted for the same bicluster).</div>
+    <div class='panel-body'>
+        <center><img src='/static/images/dataInputOutput.png' alt='Creating gbmSYGNAL Network'></center>
+    </div>
+</div>
+
+Using this approach, somatic mutations within 34 genes and 68 pathways were causally associated, through TFs and miRNAs, to the differential regulation of disease relevant genes (,b>Figure 2</b>). Notably, 9 of the 34 mutated genes are well known driver mutations in GBM (<a href='http://www.ncbi.nlm.nih.gov/pubmed/24037244'>Gonzalez-Perez et al., 2013</a>):  AHNAK2, EGFR, IDH1, MLL3, NF1, PIK3CA, PIK3R1, PTEN and RB1 (Figure 2C). The SYGNAL pipeline derived network identified additional GBM driver mutations in 25 genes and 68 pathways that putatively act via modulating the activity of TFs and miRNAs, which in turn regulate the expression of 5,193 disease relevant genes associated with patient survival and/or hallmarks of cancer. Thus, the SYGNAL pipeline provides the means to synthesize genotype, gene expression and clinical information into a TRN (the gbmSYGNAL network) with both mechanistic and causal underpinnings to explain how specific mutations act through TFs and miRNAs to generate disease-relevant gene expression signatures observed within patient data.
+</div>
+
+<div id='combNet' class='bs-callout bs-callout-default'><h4>Combinatorial regulatory interaction network</h4>
+    Nearly 40% of all biclusters in the gbmSYGNAL network (93 out of 242 biclusters) were predicted to be under combinatorial control of two or more regulators. Using GBM patient tumor expression data and bidirectional step-wise linear regression we constructed an additive combinatorial regulatory model that best explains the expression for each of the 93 bicluster eigengenes (the first principal component of the co-regulated genes). There was significant evidence that 87 of the 93 biclusters were putatively governed by an additive combinatorial regulatory scheme including two or more regulators (BH-corrected ANOVA p-value = 0.05). Of the 87 additive combinatorial models of bicluster regulation, 58 included two regulators, 17 included three regulators, 10 included four regulators, and 2 included five regulators. In the combinatorial models there were 54 TFs and 31 miRNAs that integrated into 45 TF-TF, 17 miRNA-miRNA, and 25 TF-miRNA combinatorial regulatory interactions (Figure 3A). The 54 TFs in the combinatorial models include 23 of the 26 TFs in the gbmSYGNAL network with significantly altered proliferation in glioma stem cell isolate CRISPR-Cas9 knock-outs (p-value = 4.6 x 10<sup>-3</sup>), and all 13 TFs with glioma specific proliferation effects (p-value &lt; 2.2 x 10<sup>-16</sup>). Which demonstrates that a majority of the TFs involved in combinatorial regulatory interactions are functional and disease relevant. Additionally, 44% of TF-TF, miRNA-miRNA and TF-miRNA pairs within combinatorial models had significant binding site co-occurrence within the corresponding regulatory regions (promoter or 3' UTR) of bicluster genes (BH-corrected p-value = 0.05). This demonstrates that the predicted combinatorial regulators are directly interacting with regulatory regions of the same genes and thereby mediating their co-expression. The ability of the SYGNAL pipeline to uncover combinatorial regulatory interactions not only provides deeper understanding of GBM etiology but also it enables strategies for combinatorial interventions.<br>&nbsp;<br>
+
+<div id='fig4' class='panel panel-default'>
+    <div class='panel-heading'><b>Figure 4.</b> Distribution of number of combinatorial regulatory interactions for signficiant biclsuter additive models.</div>
+    <div class='panel-body'>
+        <center><img src='/static/images/combinatorialRegulation_significant.png' alt='Combinatorial Regulation'></center>
+    </div>
+</div>
+</div>
+<div id='suppRef' class='bs-callout bs-callout-default'><h4>Supporting References</h4>
+    <ul align='left'>
+        <b>TCGA data</b>
+        <li>TCGA GBM - <a href='http://www.ncbi.nlm.nih.gov/pubmed/24120142'>Brennan et al., 2013</a></li>
+        <br>
+        <b>SYGNAL pipeline algorithms</b>
+        <li>cMonkey<sub>2</sub> - <a href='http://www.ncbi.nlm.nih.gov/pubmed/25873626'>Reiss et al., 2015</a></li>
+        <li>FIRM - <a href='http://www.ncbi.nlm.nih.gov/pubmed/22745231'>Plaisier et al., 2012</a></li>
+        <li>NEO - <a href='http://www.ncbi.nlm.nih.gov/pubmed/18412962'>Aten et al., 2008</a></li>
+        <li>MEME SUITE (MEME, TOMTOM, FIMO) - <a href='http://www.ncbi.nlm.nih.gov/pubmed/19458158'>Bailey et al., 2009</a></li>
+        <li>AME - <a href='http://www.ncbi.nlm.nih.gov/pubmed/20356413'>McLeay et al., 2010</a></li>
+        <br>
+        <b>Motif Repositories</b>
+        <li>JASPAR - <a href='http://www.ncbi.nlm.nih.gov/pubmed/24194598'>Mathelier et al., 2014</a></li>
+        <li>SELEX - <a href='http://www.ncbi.nlm.nih.gov/pubmed/23332764'>Jolma et al., 2013</a></li>
+        <li>TRANSFAC - <a href='http://www.ncbi.nlm.nih.gov/pubmed/16381825'>Matys et al., 2006</a></li>
+        <li>UniPROBE - <a href='http://www.ncbi.nlm.nih.gov/pubmed/18842628'>Newburger and Bulyk, 2009</a></li>
+    </ul>
+</div>
+<div id='contact' class='bs-callout bs-callout-default'><h4>Contact information</h4>
+    The SYGNAL pipeline and the gbmSYGNAL network were developed at the <a href='http://www.systemsbiology.org'>Institute for Systems Biology</a> by Chris Plaisier in <a href='http://baliga.systemsbiology.net/'>Nitin Baliga's lab</a>. Feel free to contact us at:
+    <ul align='left'>
+        <li><a href='mailto:cplaisier@systemsbiology.org'>cplaisier at systemsbiology dot org</a></li>
+        <li><a href='mailto:nbaliga@systemsbiology.org'>nbaliga at systemsbiology dot org</a></li>
+    </ul>
 </div>
 {% endblock %}
